@@ -1,5 +1,6 @@
 # Builds the app and publishes it to GitHub Pages on every push to main.
-# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+# One-time setup: repo Settings → Pages → Source must be "GitHub Actions"
+# (not "Deploy from a branch", which serves the raw source and shows a white screen).
 name: Deploy to GitHub Pages
 
 on:
@@ -20,8 +21,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -31,8 +32,8 @@ jobs:
         env:
           # The site lives at https://<username>.github.io/<repo-name>/
           BASE_PATH: /${{ github.event.repository.name }}/
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -44,4 +45,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
