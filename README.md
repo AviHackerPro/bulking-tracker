@@ -6,13 +6,15 @@ Everything is saved on your phone. There's no account and no server. It installs
 ## What it does
 
 - **Today:** a calorie ring and macro bars, your 5 meals with one-tap ticking, swap/skip, extras and custom foods, protein top-up ideas, and a one-tap training log.
+- **Barcode scanner:** scan a packet to get its label macros from [Open Food Facts](https://world.openfoodfacts.org) (free, no key). Scanned products can be saved for one-tap adding.
+- **AI photo analysis (optional):** snap a home meal and Google Gemini estimates each food's portion and macros. You review everything before it's logged.
 - **Plan:** edit the weekly rotation day by day (with live totals and low-protein warnings), and add, edit or delete meals.
 - **Progress:**
   - weigh-ins, with a chart of the weekly average against the target line, and a projected finish date
   - calorie suggestions (±200 cal) when progress is too slow or too fast
   - training sessions
   - weekly history
-- **Settings:** targets, goal, meal times, a whey toggle, backup export/import, and reset.
+- **Settings:** targets, goal, meal times, a whey toggle, the Gemini API key, backup export/import, and reset.
 
 ## What you need
 
@@ -76,6 +78,19 @@ After that, every `git push` to `main` re-tests and re-publishes the app automat
 
 **Back up regularly:** Settings → **Export backup** saves a `.json` file to your Downloads. Data lives in the browser storage for that address, so clearing Chrome's site data or uninstalling the app would delete it. **Import** restores a backup, on the same phone or a new one.
 
+## Set up AI photo analysis (optional)
+
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/apikey).
+2. In the app: **Settings → AI photo analysis**, paste the key, then tap **Save key**. It checks the key straight away.
+3. On Today, tap **AI photo**, take or choose a photo, add any details the photo can't show (e.g. "3 rotli, 2 tsp ghee"), and tap **Analyse**.
+
+Notes:
+- The key is stored only on your phone. It's never in the code on GitHub or in backup files.
+- On Gemini's free tier, Google may use photos to improve its products, so only photograph food. If you hit the free daily limit, switch the model to **Flash-Lite** in Settings.
+- Optional extra safety: in Google Cloud Console, restrict the key to your website (*Application restrictions → Websites → `https://YOUR-USERNAME.github.io/*`*).
+
+The barcode scanner needs camera permission and an internet connection. Products you save work offline.
+
 ## Try it on your phone during development (same Wi-Fi)
 
 ```bash
@@ -83,6 +98,7 @@ npm run dev:phone
 ```
 
 Open the **Network** address it prints (like `http://192.168.1.23:5173`) on your phone. If Windows asks, allow Node.js on **private networks**.
+The camera only works on secure addresses, so test barcode scanning on the GitHub Pages site (or type the barcode number).
 Data entered this way is separate from the installed app.
 
 ## Editing your plan
@@ -111,7 +127,10 @@ src/
     history.ts          weekly summaries
     habits.ts           training counts
     suggestions.ts      status messages, protein top-ups
-    backup.ts           export / import
+    backup.ts           export / import (never includes the API key)
+    openFoodFacts.ts    barcode → product macros
+    gemini.ts           AI photo analysis (Gemini API)
+    image.ts            shrinks photos before upload
     storage.ts          what's saved on the phone
   store/                app state + automatic saving (localStorage)
   components/           shared UI (ui.tsx kit, icons, meal rows/sheets, chart, nav)
@@ -122,4 +141,4 @@ tests/                  Vitest tests
 
 ## Tech
 
-Vite · React · TypeScript · Tailwind CSS · Zustand (state + localStorage) · date-fns · Recharts · vite-plugin-pwa · Vitest
+Vite · React · TypeScript · Tailwind CSS · Zustand (state + localStorage) · date-fns · Recharts · vite-plugin-pwa · barcode-detector · Open Food Facts · Gemini API · Vitest

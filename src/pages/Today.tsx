@@ -13,7 +13,7 @@ import { useNow } from '../lib/useNow';
 import type { Macros, SlotConfig } from '../lib/types';
 import MealRow from '../components/MealRow';
 import MealSheet from '../components/MealSheet';
-import AddExtraSheet from '../components/AddExtraSheet';
+import AddExtraSheet, { type AddTab } from '../components/AddExtraSheet';
 import SuggestionBanner from '../components/SuggestionBanner';
 import { CheckIcon, ChevronLeft, ChevronRight, PlusIcon, ScaleIcon, XIcon } from '../components/icons';
 import { Bar, Card, fmt, MacroLine, Ring, SectionTitle } from '../components/ui';
@@ -43,7 +43,7 @@ export default function Today() {
   const state = useAppStore();
   const { slots, meals, foods, settings, profile, training, goal } = state;
   const log = useMemo(() => getDayLog(state, date), [state, date]);
-  const [addOpen, setAddOpen] = useState(false);
+  const [addTab, setAddTab] = useState<AddTab | null>(null);
   const [openSlot, setOpenSlot] = useState<SlotConfig | null>(null);
 
   const eaten = eatenTotals(log);
@@ -64,6 +64,16 @@ export default function Today() {
   const weekSessions = sessionsInWeek(training, weekStartOf(date));
 
   const go = (days: number) => setPicked(toDateStr(addDays(fromDateStr(date), days)));
+  /** A photo matched one of your meals: tick it off if it's planned today, otherwise add it as an extra. */
+  const logLibraryMeal = (mealId: string) => {
+    const slot = orderedSlots(slots).find((s) => log.slots[s.id].meal?.mealId === mealId && log.slots[s.id].status !== 'eaten');
+    if (slot) return state.setSlotStatus(date, slot.id, 'eaten');
+    const meal = meals.find((m) => m.id === mealId);
+    if (meal) {
+      const base = { calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat };
+      state.addExtra(date, { name: meal.name, serving: '1 meal', base, multiplier: 1 });
+    }
+  };
   const toggleTraining = () =>
     trainedSessions.length ? trainedSessions.forEach((t) => state.deleteTraining(t.id)) : state.logTraining(date, '');
 
@@ -206,12 +216,24 @@ export default function Today() {
             ))}
           </ul>
         )}
-        <button
-          onClick={() => setAddOpen(true)}
-          className={`flex w-full items-center justify-center gap-2 px-4 py-4 font-semibold text-accent active:bg-track ${log.extras.length ? 'border-t border-line' : ''} rounded-b-3xl ${log.extras.length ? '' : 'rounded-t-3xl'}`}
-        >
-          <PlusIcon size={18} /> Add food or snack
-        </button>
+        <div className={`grid grid-cols-3 gap-2 p-3 ${log.extras.length ? 'border-t border-line' : ''}`}>
+          {(
+            [
+              ['list', <PlusIcon key="i" size={20} />, 'Add food'],
+              ['barcode', <span key="i" className="text-lg leading-none">▥</span>, 'Barcode'],
+              ['photo', <span key="i" className="text-lg leading-none">📷</span>, 'AI photo'],
+            ] as const
+          ).map(([tab, icon, label]) => (
+            <button
+              key={tab}
+              onClick={() => setAddTab(tab)}
+              className="flex flex-col items-center gap-1 rounded-2xl bg-track px-2 py-3 text-sm font-semibold text-accent active:scale-[0.97]"
+            >
+              {icon}
+              {label}
+            </button>
+          ))}
+        </div>
       </Card>
 
       {/* Training */}
@@ -240,11 +262,10 @@ export default function Today() {
       </Card>
 
       <AddExtraSheet
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        foods={foods}
-        wheyEnabled={settings.wheyEnabled}
+        openTab={addTab}
+        onClose={() => setAddTab(null)}
         onAdd={(extra) => state.addExtra(date, extra)}
+        onLogMeal={logLibraryMeal}
       />
       <MealSheet
         slot={openSlot}

@@ -35,7 +35,8 @@ export interface Meal extends Macros {
   ingredients: string;
 }
 
-export type FoodCategory = 'protein' | 'carb' | 'fat' | 'extra';
+/** 'saved' = products you scanned by barcode and saved. */
+export type FoodCategory = 'protein' | 'carb' | 'fat' | 'extra' | 'saved';
 
 export interface Food extends Macros {
   id: string;
@@ -45,6 +46,8 @@ export interface Food extends Macros {
   category: FoodCategory;
   /** Whey is hidden unless switched on in Settings. */
   isWhey?: boolean;
+  /** For foods saved from a barcode scan. */
+  barcode?: string;
 }
 
 /** Which meal id is planned for each slot, on each day of the week. */

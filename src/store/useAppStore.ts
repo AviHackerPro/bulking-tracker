@@ -16,7 +16,7 @@ import { todayStr } from '../lib/dates';
 import { findMeal } from '../lib/totals';
 import { defaultPlan } from '../data/plan';
 import { adjustTargets } from '../lib/progress';
-import type { AdjustDirection, DayLog, DayType, ExtraLog, GoalSettings, Macros, Meal, SlotId, SlotStatus, Weekday } from '../lib/types';
+import type { AdjustDirection, DayLog, DayType, ExtraLog, Food, GoalSettings, Macros, Meal, SlotId, SlotStatus, Weekday } from '../lib/types';
 
 interface Actions {
   /** First-run setup: sets the start date and records the first weigh-in. */
@@ -65,6 +65,13 @@ interface Actions {
   importData: (data: AppData) => void;
   /** Delete everything and start again. */
   resetAll: () => void;
+
+  // Scanned foods & AI
+  /** Save a scanned product to the food list (replaces an earlier save of the same barcode). */
+  saveFood: (food: Omit<Food, 'id'>) => void;
+  deleteFood: (id: string) => void;
+  setGeminiKey: (key: string) => void;
+  setGeminiModel: (model: string) => void;
 }
 
 export type AppState = AppData & Actions;
@@ -213,12 +220,29 @@ export const useAppStore = create<AppState>()(
             const today = todayStr();
             let dayLogs = edits.syncLogsWithRotation(s.dayLogs, today, fresh.rotation, meals);
             for (const m of fresh.meals) dayLogs = edits.refreshMealInLogs(dayLogs, today, m);
-            return { meals, rotation: fresh.rotation, foods: fresh.foods, dayLogs };
+            // Keep foods you saved from barcode scans.
+            const foods = [...fresh.foods, ...s.foods.filter((f) => f.category === 'saved')];
+            return { meals, rotation: fresh.rotation, foods, dayLogs };
           }),
 
-        importData: (data) => set({ ...data }),
+        // A backup never contains the API key, so keep the one on this phone.
+        importData: (data) =>
+          set((s) => ({ ...data, settings: { ...data.settings, geminiApiKey: s.settings.geminiApiKey } })),
 
         resetAll: () => set({ ...createInitialData() }),
+
+        saveFood: (food) =>
+          set((s) => {
+            const existing = food.barcode ? s.foods.find((f) => f.barcode === food.barcode) : undefined;
+            const saved: Food = { ...food, id: existing?.id ?? `saved-${newId()}`, category: 'saved' };
+            return { foods: existing ? s.foods.map((f) => (f.id === existing.id ? saved : f)) : [...s.foods, saved] };
+          }),
+
+        deleteFood: (id) => set((s) => ({ foods: s.foods.filter((f) => !(f.id === id && f.category === 'saved')) })),
+
+        setGeminiKey: (key) => set((s) => ({ settings: { ...s.settings, geminiApiKey: key.trim() } })),
+
+        setGeminiModel: (model) => set((s) => ({ settings: { ...s.settings, geminiModel: model } })),
       };
     },
     {

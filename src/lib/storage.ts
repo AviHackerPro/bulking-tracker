@@ -34,6 +34,9 @@ export interface AppSettings {
   wheyEnabled: boolean;
   /** Date of the last JSON export ("yyyy-MM-dd"), for the backup reminder. */
   lastBackupDate?: string | null;
+  /** Gemini API key for photo analysis. Stays on this phone: never in backups. */
+  geminiApiKey?: string;
+  geminiModel?: string;
 }
 
 /** All saved data. New fields get added here in later phases. */

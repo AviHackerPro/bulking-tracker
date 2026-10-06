@@ -3,6 +3,7 @@ import { differenceInCalendarDays, format } from 'date-fns';
 import { useAppStore } from '../store/useAppStore';
 import { defaultPlan } from '../data/plan';
 import { backupFileName, makeBackup, parseBackup } from '../lib/backup';
+import { DEFAULT_GEMINI_MODEL, friendlyError, GEMINI_MODELS, testGeminiKey } from '../lib/gemini';
 import { fromDateStr, todayStr } from '../lib/dates';
 import { caloriesFromMacros, orderedSlots } from '../lib/totals';
 import type { AppData } from '../lib/storage';
@@ -19,6 +20,7 @@ export default function Settings() {
       <GoalCard key={`g${version}`} />
       <MealTimesCard />
       <FoodListCard />
+      <AiCard />
       <BackupCard onRestored={() => setVersion((v) => v + 1)} />
       <ResetCard />
       <p className="mx-5 mt-6 text-center text-xs text-muted">
@@ -197,6 +199,81 @@ function FoodListCard() {
           </div>
           <Toggle checked={settings.wheyEnabled} onChange={setWhey} label="Whey protein" />
         </div>
+      </Card>
+    </>
+  );
+}
+
+// ----- AI photo analysis -------------------------------------------------
+
+function AiCard() {
+  const { settings, setGeminiKey, setGeminiModel } = useAppStore();
+  const saved = settings.geminiApiKey ?? '';
+  const model = settings.geminiModel ?? DEFAULT_GEMINI_MODEL;
+  const [key, setKey] = useState(saved);
+  const [show, setShow] = useState(false);
+  const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  async function saveAndTest() {
+    setGeminiKey(key);
+    if (!key.trim()) {
+      setStatus({ text: 'Key removed. Photo analysis is off.', ok: true });
+      return;
+    }
+    setTesting(true);
+    setStatus(null);
+    try {
+      await testGeminiKey(key.trim(), model);
+      setStatus({ text: 'Key works! Photo analysis is ready ✓', ok: true });
+    } catch (e) {
+      setStatus({ text: friendlyError(e), ok: false });
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  return (
+    <>
+      <SectionTitle>AI photo analysis</SectionTitle>
+      <Card>
+        <p className="text-sm text-muted">
+          Snap a home meal and Gemini estimates its macros. Uses your own free Gemini API key from Google AI Studio.
+        </p>
+        <div className="mt-3 flex items-center rounded-2xl border border-transparent bg-track transition focus-within:border-accent focus-within:bg-card">
+          <input
+            type={show ? 'text' : 'password'}
+            value={key}
+            onChange={(e) => {
+              setKey(e.target.value);
+              setStatus(null);
+            }}
+            placeholder="Paste your Gemini API key"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full min-w-0 bg-transparent px-4 py-3 text-[15px] outline-none placeholder:text-muted/70"
+            aria-label="Gemini API key"
+          />
+          <button type="button" className="pr-4 text-sm font-semibold text-accent" onClick={() => setShow(!show)}>
+            {show ? 'Hide' : 'Show'}
+          </button>
+        </div>
+        <label className="mt-2 block">
+          <span className="mb-1 block text-xs font-semibold text-muted">Model</span>
+          <select value={model} onChange={(e) => setGeminiModel(e.target.value)} className={inputClass}>
+            {GEMINI_MODELS.map((m) => (
+              <option key={m.id} value={m.id}>{m.label}: {m.hint}</option>
+            ))}
+          </select>
+        </label>
+        <button className={`${buttonClass.primary} mt-3 w-full`} disabled={testing || (!key.trim() && !saved) || (key.trim() === saved && !!saved && status?.ok)} onClick={saveAndTest}>
+          {testing ? 'Checking…' : key.trim() !== saved ? 'Save key' : 'Test key'}
+        </button>
+        {status && <p className={`mt-2 text-sm font-semibold ${status.ok ? 'text-accent' : 'text-warn'}`}>{status.text}</p>}
+        <p className="mt-3 text-xs leading-relaxed text-muted">
+          Your key is stored only on this phone and is never included in backups. Photos go straight to Google. On Gemini's free tier,
+          Google may use them to improve its products, so only photograph food.
+        </p>
       </Card>
     </>
   );

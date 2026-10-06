@@ -1,50 +1,100 @@
 import { useMemo, useState } from 'react';
+import { useAppStore } from '../store/useAppStore';
+import { DEFAULT_GEMINI_MODEL, type AnalysedItem } from '../lib/gemini';
 import { scaleMacros } from '../lib/totals';
 import type { ExtraLog, Food, FoodCategory, Macros } from '../lib/types';
+import BarcodeScanner from './BarcodeScanner';
+import PhotoAnalyser from './PhotoAnalyser';
+import { XIcon } from './icons';
 import { buttonClass, fmt, inputClass, Segmented, Sheet, UnitInput } from './ui';
 
 const CATEGORY_LABELS: Record<FoodCategory, string> = {
+  saved: 'My saved foods',
   extra: 'Quick extras',
   protein: 'Protein',
   carb: 'Carbs',
   fat: 'Fats',
 };
-const CATEGORY_ORDER: FoodCategory[] = ['extra', 'protein', 'carb', 'fat'];
+const CATEGORY_ORDER: FoodCategory[] = ['saved', 'extra', 'protein', 'carb', 'fat'];
 const QUICK_MULTIPLIERS = [0.5, 1, 1.5, 2];
 
+export type AddTab = 'list' | 'barcode' | 'photo' | 'custom';
+
 interface Props {
-  open: boolean;
+  /** Which tab to open on, or null when closed. */
+  openTab: AddTab | null;
   onClose: () => void;
-  foods: Food[];
-  wheyEnabled: boolean;
   onAdd: (extra: Omit<ExtraLog, 'id'>) => void;
+  /** Log one of your library meals (from a matching photo). */
+  onLogMeal: (mealId: string) => void;
 }
 
-export default function AddExtraSheet({ open, onClose, foods, wheyEnabled, onAdd }: Props) {
-  const [tab, setTab] = useState<'list' | 'custom'>('list');
+export default function AddExtraSheet({ openTab, onClose, onAdd, onLogMeal }: Props) {
+  const { foods, meals, settings, saveFood, deleteFood } = useAppStore();
+  const [tab, setTab] = useState<AddTab>(openTab ?? 'list');
+  const [lastOpen, setLastOpen] = useState(openTab);
+  // Switch to the requested tab each time the sheet opens.
+  if (openTab !== lastOpen) {
+    setLastOpen(openTab);
+    if (openTab) setTab(openTab);
+  }
 
   function add(extra: Omit<ExtraLog, 'id'>) {
     onAdd(extra);
     onClose();
   }
 
+  function addAnalysed(items: { item: AnalysedItem; multiplier: number }[]) {
+    for (const { item, multiplier } of items) {
+      const base: Macros = { calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat };
+      onAdd({ name: item.name, serving: item.portion, base, multiplier });
+    }
+    onClose();
+  }
+
   return (
-    <Sheet open={open} onClose={onClose} title="Add food">
+    <Sheet open={openTab !== null} onClose={onClose} title="Add food">
       <Segmented
         className="mb-4"
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'list', label: 'Food list' },
+          { value: 'list', label: 'Foods' },
+          { value: 'barcode', label: 'Barcode' },
+          { value: 'photo', label: 'Photo' },
           { value: 'custom', label: 'Custom' },
         ]}
       />
-      {tab === 'list' ? <FoodList foods={foods} wheyEnabled={wheyEnabled} onAdd={add} /> : <CustomFood onAdd={add} />}
+      {tab === 'list' && <FoodList foods={foods} wheyEnabled={settings.wheyEnabled} onAdd={add} onDelete={deleteFood} />}
+      {tab === 'barcode' && <BarcodeScanner foods={foods} onAdd={add} onSave={saveFood} />}
+      {tab === 'photo' && (
+        <PhotoAnalyser
+          apiKey={settings.geminiApiKey ?? ''}
+          model={settings.geminiModel ?? DEFAULT_GEMINI_MODEL}
+          meals={meals}
+          onAddItems={addAnalysed}
+          onLogMeal={(id) => {
+            onLogMeal(id);
+            onClose();
+          }}
+        />
+      )}
+      {tab === 'custom' && <CustomFood onAdd={add} />}
     </Sheet>
   );
 }
 
-function FoodList({ foods, wheyEnabled, onAdd }: { foods: Food[]; wheyEnabled: boolean; onAdd: (e: Omit<ExtraLog, 'id'>) => void }) {
+function FoodList({
+  foods,
+  wheyEnabled,
+  onAdd,
+  onDelete,
+}: {
+  foods: Food[];
+  wheyEnabled: boolean;
+  onAdd: (e: Omit<ExtraLog, 'id'>) => void;
+  onDelete: (id: string) => void;
+}) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -56,7 +106,7 @@ function FoodList({ foods, wheyEnabled, onAdd }: { foods: Food[]; wheyEnabled: b
   return (
     <div>
       <input type="search" placeholder="Search foods" value={query} onChange={(e) => setQuery(e.target.value)} className={`${inputClass} mb-4`} />
-      {visible.length === 0 && <p className="py-6 text-center text-sm text-muted">No foods match. Try the Custom tab.</p>}
+      {visible.length === 0 && <p className="py-6 text-center text-sm text-muted">No foods match. Try Barcode or Custom.</p>}
       {CATEGORY_ORDER.map((cat) => {
         const items = visible.filter((f) => f.category === cat);
         if (items.length === 0) return null;
@@ -83,6 +133,17 @@ function FoodList({ foods, wheyEnabled, onAdd }: { foods: Food[]; wheyEnabled: b
                       </span>
                     </button>
                     {isOpen && <ServingPicker food={f} onAdd={onAdd} />}
+                    {isOpen && f.category === 'saved' && (
+                      <button
+                        className="mx-auto mb-3 flex items-center gap-1 text-xs font-semibold text-muted"
+                        onClick={() => {
+                          onDelete(f.id);
+                          setSelected(null);
+                        }}
+                      >
+                        <XIcon size={14} /> Remove from my saved foods
+                      </button>
+                    )}
                   </li>
                 );
               })}

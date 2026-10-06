@@ -21,7 +21,10 @@ export function pickData(state: AppData): AppData {
 }
 
 export function makeBackup(state: AppData, now: Date = new Date()): BackupFile {
-  return { app: BACKUP_APP, version: BACKUP_VERSION, exportedAt: now.toISOString(), data: pickData(state) };
+  const data = pickData(state);
+  // The API key is a secret: keep it out of backup files.
+  const { geminiApiKey: _secret, ...settings } = data.settings;
+  return { app: BACKUP_APP, version: BACKUP_VERSION, exportedAt: now.toISOString(), data: { ...data, settings } };
 }
 
 export function backupFileName(today: string): string {

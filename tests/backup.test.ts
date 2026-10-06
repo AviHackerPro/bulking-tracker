@@ -27,6 +27,14 @@ describe('backups', () => {
     expect(Object.keys(pickData(withFns))).not.toContain('logWeight');
   });
 
+  it('never puts the Gemini API key in a backup', () => {
+    const state = sampleState();
+    state.settings = { ...state.settings, geminiApiKey: 'secret-key-123', geminiModel: 'gemini-3.8-flash' };
+    const text = JSON.stringify(makeBackup(state));
+    expect(text).not.toContain('secret-key-123');
+    expect(text).toContain('gemini-3.8-flash');
+  });
+
   it('names the file by date', () => {
     expect(backupFileName('2026-10-06')).toBe('bulking-tracker-backup-2026-10-06.json');
   });
