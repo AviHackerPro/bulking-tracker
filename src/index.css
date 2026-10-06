@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* Design tokens. Use them as Tailwind classes, e.g. bg-card, text-muted, bg-protein, shadow-card. */
+@theme {
+  --color-canvas: #f4f6f8;
+  --color-card: #ffffff;
+  --color-ink: #121721;
+  --color-muted: #667085;
+  --color-line: #e9ecf1;
+  --color-track: #eef1f4;
+  --color-accent: #0a9468;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #e5f6ef;
+
+  /* Hero gradient (Today, Welcome). */
+  --color-hero-from: #0a9468;
+  --color-hero-to: #14b8a6;
+
+  --color-cal: #0a9468;
+  --color-protein: #6d4fd8;
+  --color-carbs: #d48a06;
+  --color-fat: #0b84c4;
+
+  /* Gentle "heads up" colour (not an error red). */
+  --color-warn: #b45309;
+  --color-warn-soft: #fdf3e2;
+
+  /* Chart series (validated for colour-blind separation in both modes). */
+  --color-chart-avg: #059669;
+  --color-chart-target: #6d4fd8;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 6px 20px -4px rgb(16 24 40 / 0.06);
+  --shadow-float: 0 8px 30px -6px rgb(16 24 40 / 0.18);
+
+  --font-sans: "Plus Jakarta Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Dark mode follows the phone's setting. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #0b0f14;
+    --color-card: #151b23;
+    --color-ink: #eef1f5;
+    --color-muted: #8d97a7;
+    --color-line: #232b36;
+    --color-track: #1e2630;
+    --color-accent: #34c591;
+    --color-accent-ink: #04150e;
+    --color-accent-soft: #12302a;
+
+    --color-hero-from: #0b7a57;
+    --color-hero-to: #0f8f83;
+
+    --color-cal: #34c591;
+    --color-protein: #9b86f0;
+    --color-carbs: #eaa832;
+    --color-fat: #3fa9e0;
+
+    --color-warn: #f0b04a;
+    --color-warn-soft: #2e2416;
+
+    --color-chart-avg: #2aa77a;
+    --color-chart-target: #8a72ea;
+
+    --shadow-card: 0 0 0 1px var(--color-line);
+    --shadow-float: 0 8px 30px -6px rgb(0 0 0 / 0.6);
+  }
+}
+
+html {
+  color-scheme: light dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bottom-sheet entrance. */
+@keyframes sheet-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-sheet { animation: sheet-up 0.22s ease-out; }
+.animate-fade { animation: fade-in 0.2s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet, .animate-fade { animation: none; }
+}
