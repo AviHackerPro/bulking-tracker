@@ -53,6 +53,10 @@ export function setDayType(log: DayLog, dayType: DayType): DayLog {
   return { ...log, dayType };
 }
 
+export function setComplete(log: DayLog, complete: boolean): DayLog {
+  return { ...log, complete };
+}
+
 export function addExtra(log: DayLog, extra: ExtraLog): DayLog {
   return { ...log, extras: [...log.extras, extra] };
 }
@@ -103,6 +107,7 @@ export function slotCounts(log: DayLog): Record<SlotStatus, number> {
 /** True if anything has been ticked, skipped, swapped, added, or the day type changed. */
 export function hasActivity(log: DayLog): boolean {
   return (
+    !!log.complete ||
     log.extras.length > 0 ||
     SLOT_ORDER.some((s) => log.slots[s].status !== 'planned' || isSwapped(log, s)) ||
     log.dayType !== defaultDayType(weekdayOf(log.date))

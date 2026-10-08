@@ -12,7 +12,8 @@ Everything is saved on your phone. There's no account and no server. It installs
 - **Plan:** edit the weekly rotation day by day (with live totals and low-protein warnings), and add, edit or delete meals.
 - **Progress:**
   - weigh-ins, with a chart of the weekly average against the target line, and a projected finish date
-  - calorie suggestions (±200 cal) when progress is too slow or too fast
+  - **maintenance coach**: estimates the calories you really burn from your logged intake and weight trend, and suggests a weekly target for your goal rate (only from days you mark "I logged everything"; suggestions are capped and never change anything until you accept)
+  - a simple ±200 cal check while the coach is still calibrating
   - training sessions
   - weekly history
 - **Settings:** appearance (dark, light or match phone), targets, goal, meal times, a whey toggle, the Gemini API key, passcode, backup export/import, and reset.
@@ -125,6 +126,7 @@ src/
     totals.ts           calorie/macro maths
     daylog.ts           ticking, swapping, skipping, extras
     progress.ts         weekly averages, ±200 cal rule, projections
+    coach.ts            maintenance coach (adaptive expenditure + weekly check-ins)
     planEdits.ts        rotation & meal-library edits
     history.ts          weekly summaries
     habits.ts           training counts

@@ -107,6 +107,8 @@ export interface DayLog {
   targets: Macros;
   slots: Record<SlotId, SlotLog>;
   extras: ExtraLog[];
+  /** You marked this day as fully logged. Only complete days feed the maintenance coach. */
+  complete?: boolean;
 }
 
 // ----- Weight & targets ----------------------------------------------
@@ -128,7 +130,7 @@ export interface TargetChange {
   from: Macros;
   to: Macros;
   /** Missing on older saved data, which means 'suggestion'. */
-  source?: 'suggestion' | 'manual';
+  source?: 'suggestion' | 'manual' | 'coach';
 }
 
 /** A suggestion you said "not now" to. It comes back after the next week ends. */

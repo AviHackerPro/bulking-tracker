@@ -29,6 +29,8 @@ interface Actions {
   setDayType: (date: string, dayType: DayType) => void;
   addExtra: (date: string, extra: Omit<ExtraLog, 'id'>) => void;
   removeExtra: (date: string, extraId: string) => void;
+  /** Mark a day as fully logged (or not). */
+  setDayComplete: (date: string, complete: boolean) => void;
 
   // Weekly rotation
   setRotationMeal: (day: Weekday, slot: SlotId, mealId: string) => void;
@@ -45,7 +47,7 @@ interface Actions {
   logWeight: (date: string, weightKg: number) => void;
   deleteWeighIn: (id: string) => void;
   /** Accept a ±calorie suggestion: updates targets from today onwards. */
-  acceptCalorieChange: (direction: AdjustDirection, deltaCalories: number) => void;
+  acceptCalorieChange: (direction: AdjustDirection, deltaCalories: number, source?: 'suggestion' | 'coach') => void;
   dismissSuggestion: (weekStart: string, direction: AdjustDirection) => void;
 
   // Training
@@ -122,6 +124,8 @@ export const useAppStore = create<AppState>()(
 
         removeExtra: (date, extraId) => updateDay(date, (log) => day.removeExtra(log, extraId)),
 
+        setDayComplete: (date, complete) => updateDay(date, (log) => day.setComplete(log, complete)),
+
         setRotationMeal: (weekday, slot, mealId) =>
           set((s) => {
             const rotation = edits.setRotationSlot(s.rotation, weekday, slot, mealId);
@@ -167,7 +171,7 @@ export const useAppStore = create<AppState>()(
 
         deleteWeighIn: (id) => set((s) => ({ weighIns: s.weighIns.filter((w) => w.id !== id) })),
 
-        acceptCalorieChange: (direction, deltaCalories) =>
+        acceptCalorieChange: (direction, deltaCalories, source = 'suggestion') =>
           set((s) => {
             const today = todayStr();
             const to = adjustTargets(s.targets, deltaCalories);
@@ -181,7 +185,7 @@ export const useAppStore = create<AppState>()(
               dismissedSuggestion: null,
               targetChanges: [
                 ...s.targetChanges,
-                { id: newId(), date: today, direction, deltaCalories, from: s.targets, to, source: 'suggestion' as const },
+                { id: newId(), date: today, direction, deltaCalories, from: s.targets, to, source },
               ],
             };
           }),

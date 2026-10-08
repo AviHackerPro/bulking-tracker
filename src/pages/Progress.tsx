@@ -20,11 +20,12 @@ import {
 import { useNow } from '../lib/useNow';
 import type { WeighIn } from '../lib/types';
 import WeightChart from '../components/WeightChart';
+import CoachPanel from '../components/CoachPanel';
 import SuggestionBanner from '../components/SuggestionBanner';
 import { ChevronDown, ChevronRight, XIcon } from '../components/icons';
 import { Bar, buttonClass, Card, fmt, inputClass, PageHeader, SectionTitle, Segmented, UnitInput } from '../components/ui';
 
-type Tab = 'weight' | 'training' | 'history';
+type Tab = 'weight' | 'coach' | 'training' | 'history';
 
 const longDate = (d: string) => format(fromDateStr(d), 'd MMM yyyy');
 const shortDate = (d: string) => format(fromDateStr(d), 'EEE d MMM');
@@ -33,7 +34,7 @@ const signed = (n: number, dp = 2) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFi
 export default function Progress() {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab');
-  const tab: Tab = raw === 'training' || raw === 'history' ? raw : 'weight';
+  const tab: Tab = raw === 'coach' || raw === 'training' || raw === 'history' ? raw : 'weight';
 
   return (
     <main>
@@ -44,11 +45,13 @@ export default function Progress() {
         onChange={(t) => setParams(t === 'weight' ? {} : { tab: t }, { replace: true })}
         options={[
           { value: 'weight', label: 'Weight' },
+          { value: 'coach', label: 'Coach' },
           { value: 'training', label: 'Training' },
           { value: 'history', label: 'History' },
         ]}
       />
       {tab === 'weight' && <WeightTab />}
+      {tab === 'coach' && <CoachPanel />}
       {tab === 'training' && <TrainingTab />}
       {tab === 'history' && <HistoryTab />}
     </main>

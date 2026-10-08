@@ -27,6 +27,7 @@ import {
   ScaleIcon,
   SchoolIcon,
   SparkleIcon,
+  TargetIcon,
   XIcon,
 } from '../components/icons';
 import Celebration from '../components/Celebration';
@@ -68,7 +69,7 @@ export default function Today() {
   const ideas = gap > 0 ? proteinSuggestions(foods, gap, settings.wheyEnabled) : [];
   const minDate = profile.startDate ?? today;
 
-  const { suggestion } = useProgress(today);
+  const { suggestion, coach } = useProgress(today);
   const showWeighIn =
     isToday &&
     now.getHours() < 12 &&
@@ -159,6 +160,21 @@ export default function Today() {
 
       {/* Nudges: only shown when they matter */}
       {isToday && suggestion && <SuggestionBanner suggestion={suggestion} targets={state.targets} compact />}
+      {isToday && coach?.suggestion && (
+        <Link to="/progress?tab=coach" className="mx-4 mb-3 flex items-center gap-3 rounded-3xl bg-card p-4 shadow-glow active:scale-[0.99]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+            <TargetIcon />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">Weekly check-in ready</span>
+            <span className="block text-sm text-muted">
+              Your coach suggests {coach.suggestion.deltaCalories > 0 ? '+' : '−'}
+              {fmt(Math.abs(coach.suggestion.deltaCalories))} cal a day
+            </span>
+          </span>
+          <ChevronRight className="shrink-0 text-muted" />
+        </Link>
+      )}
 
       {showWeighIn && (
         <Link to="/progress" className="mx-4 mb-3 flex items-center gap-3 rounded-3xl bg-card p-4 shadow-card active:scale-[0.99]">
@@ -289,6 +305,36 @@ export default function Today() {
           <span
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition ${
               trainedSessions.length ? 'border-accent bg-accent text-accent-ink' : 'border-line text-transparent'
+            }`}
+          >
+            <CheckIcon size={20} />
+          </span>
+        </button>
+      </Card>
+
+      {/* Mark the day as fully logged (feeds the maintenance coach) */}
+      <Card flush className={`mt-6 ${!log.complete && counts.planned === 0 ? 'ring-1 ring-accent/50' : ''}`}>
+        <button
+          onClick={() => {
+            haptic(log.complete ? 8 : 18);
+            state.setDayComplete(date, !log.complete);
+          }}
+          className="flex w-full items-center gap-3 px-4 py-4 text-left"
+          aria-pressed={!!log.complete}
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">{log.complete ? 'Day fully logged' : 'I logged everything'}</span>
+            <span className="block text-sm text-muted">
+              {log.complete
+                ? 'Your coach will use this day.'
+                : counts.planned === 0
+                  ? 'All meals done. Anything else to add? Then tick this.'
+                  : 'Tick at the end of the day so your coach can use it.'}
+            </span>
+          </span>
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition ${
+              log.complete ? 'border-accent bg-accent text-accent-ink' : 'border-line text-transparent'
             }`}
           >
             <CheckIcon size={20} />
