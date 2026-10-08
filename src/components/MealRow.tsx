@@ -2,7 +2,7 @@ import { formatTime } from '../lib/dates';
 import { isSwapped } from '../lib/daylog';
 import type { DayLog, SlotConfig } from '../lib/types';
 import { CheckIcon } from './icons';
-import { MacroLine, SLOT_EMOJI } from './ui';
+import { MacroLine, SlotIcon } from './ui';
 
 /** One meal slot as a slim row: tap the row for details, tap the circle to tick it off. */
 export default function MealRow({
@@ -26,8 +26,12 @@ export default function MealRow({
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <button onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`${label}: ${entry.meal?.name ?? 'no meal'}. Open details`}>
-        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl ${eaten ? 'bg-accent-soft' : 'bg-track'} ${skipped ? 'opacity-40 grayscale' : ''}`}>
-          {SLOT_EMOJI[slot.id]}
+        <span
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
+            eaten ? 'bg-accent-soft text-accent' : 'bg-track text-muted'
+          } ${skipped ? 'opacity-40' : ''}`}
+        >
+          <SlotIcon slot={slot.id} />
         </span>
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted">

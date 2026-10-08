@@ -4,8 +4,7 @@ import { analyseMeal, friendlyError, type AnalysedItem, type PhotoAnalysis } fro
 import { prepareImage, type PreparedImage } from '../lib/image';
 import { scaleMacros, sumMacros } from '../lib/totals';
 import type { Meal } from '../lib/types';
-import { Spinner } from './BarcodeScanner';
-import { CheckIcon, XIcon } from './icons';
+import { CameraIcon, CheckIcon, ImageIcon, NoteIcon, SparkleIcon, XIcon } from './icons';
 import { buttonClass, fmt, inputClass, MacroLine } from './ui';
 
 const MULTIPLIERS = [0.5, 1, 1.5, 2];
@@ -38,7 +37,7 @@ export default function AiEstimator({
   if (!apiKey) {
     return (
       <div className="rounded-2xl bg-track px-4 py-5 text-center">
-        <p className="text-3xl">✨</p>
+        <SparkleIcon size={32} className="mx-auto text-accent" />
         <p className="mt-2 font-bold">Set up AI estimates</p>
         <p className="mt-1 text-sm text-muted">
           Add your Gemini API key in Settings, then describe or photograph any meal to estimate its macros.
@@ -128,23 +127,30 @@ export default function AiEstimator({
           ) : (
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button className={buttonClass.ghost} onClick={() => cameraRef.current?.click()} disabled={busy}>
-                📷 Add photo
+                <CameraIcon size={18} /> Add photo
               </button>
               <button className={buttonClass.ghost} onClick={() => galleryRef.current?.click()} disabled={busy}>
-                🖼️ From gallery
+                <ImageIcon size={18} /> From gallery
               </button>
             </div>
           )}
 
           {busy ? (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-track px-4 py-3">
-              <Spinner />
-              <span className="flex-1 text-[15px]">{image ? 'Looking at your meal…' : 'Working out the macros…'}</span>
-              <button className="text-sm font-semibold text-muted" onClick={() => abortRef.current?.abort()}>Cancel</button>
+            <div className="mt-3" aria-live="polite">
+              <div className="flex items-center gap-2.5 text-[15px]">
+                <SparkleIcon size={18} className="animate-pulse text-accent" />
+                <span className="flex-1">{image ? 'Looking at your meal…' : 'Working out the macros…'}</span>
+                <button className="text-sm font-semibold text-muted" onClick={() => abortRef.current?.abort()}>Cancel</button>
+              </div>
+              <div className="mt-3 space-y-2" aria-hidden>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="shimmer h-14 rounded-2xl" style={{ animationDelay: `${i * 120}ms` }} />
+                ))}
+              </div>
             </div>
           ) : (
             <button className={`${buttonClass.primary} mt-3 w-full`} onClick={analyse} disabled={!image && !note.trim()}>
-              ✨ Estimate macros
+              <SparkleIcon size={18} /> Estimate macros
             </button>
           )}
         </>
@@ -212,7 +218,7 @@ export default function AiEstimator({
                   );
                 })}
               </ul>
-              {result.notes && <p className="mt-3 text-sm text-muted">💬 {result.notes}</p>}
+              {result.notes && <p className="mt-3 flex gap-2 text-sm text-muted"><NoteIcon size={16} className="mt-0.5 shrink-0" />{result.notes}</p>}
               <button
                 className={`${buttonClass.primary} mt-4 w-full`}
                 disabled={chosen.length === 0}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAppStore } from '../store/useAppStore';
 import { todayStr } from '../lib/dates';
 import { buttonClass, fmt, UnitInput } from '../components/ui';
+import { LogoTile, Wordmark } from '../components/Logo';
 
 export default function Welcome() {
   const goal = useAppStore((s) => s.goal);
@@ -25,19 +26,22 @@ export default function Welcome() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col">
-      <section className="rounded-b-[36px] bg-gradient-to-br from-hero-from to-hero-to px-6 pt-14 pb-10 text-white">
-        <p className="text-5xl">💪</p>
-        <h1 className="mt-4 text-[32px] leading-tight font-extrabold tracking-tight">Let's start your bulk</h1>
-        <p className="mt-2 text-[15px] text-white/90">Your plan is ready. Here's what you're aiming for:</p>
-        <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+      <section className="hero-surface rounded-b-[36px] border-x-0 border-t-0 px-6 pt-14 pb-10">
+        <div className="flex items-center gap-3">
+          <LogoTile size={48} />
+          <Wordmark className="text-gold-gradient text-2xl" />
+        </div>
+        <h1 className="mt-8 text-[32px] leading-tight font-extrabold tracking-tight">Let's build your bulk</h1>
+        <p className="mt-2 text-[15px] text-muted">Your plan is ready. Here's what you're aiming for:</p>
+        <div className="mt-6 grid grid-cols-3 gap-2 text-center">
           {[
-            [fmt(targets.calories), 'calories'],
-            [`${targets.protein} g`, 'protein'],
+            [fmt(targets.calories), 'calories a day'],
+            [`${targets.protein} g`, 'protein a day'],
             [`${goal.goalWeightKg} kg`, 'goal weight'],
           ].map(([v, l]) => (
-            <div key={l} className="rounded-2xl bg-white/15 px-2 py-3">
-              <div className="text-lg font-extrabold">{v}</div>
-              <div className="text-xs text-white/80">{l}</div>
+            <div key={l} className="rounded-2xl bg-white/[0.06] px-2 py-3 ring-1 ring-white/10">
+              <div className="num text-lg font-extrabold text-accent">{v}</div>
+              <div className="text-[11px] text-muted">{l}</div>
             </div>
           ))}
         </div>

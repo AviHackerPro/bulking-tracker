@@ -4,7 +4,7 @@ import { usesOfMeal } from '../lib/planEdits';
 import { caloriesFromMacros, mealsForSlot } from '../lib/totals';
 import type { Macros, Meal, Rotation, SlotConfig } from '../lib/types';
 import { TrashIcon } from './icons';
-import { buttonClass, fmt, inputClass, Sheet, SLOT_EMOJI, UnitInput } from './ui';
+import { buttonClass, fmt, inputClass, Sheet, SlotIcon, UnitInput } from './ui';
 
 type MealValues = Omit<Meal, 'id' | 'slot'>;
 
@@ -72,7 +72,7 @@ function MealForm({
         if (valid) onSave({ name: name.trim(), ingredients: ingredients.trim(), ...macros });
       }}
     >
-      <p className="-mt-1 text-sm text-muted">{SLOT_EMOJI[slot.id]} {slot.label}</p>
+      <p className="-mt-1 flex items-center gap-1.5 text-sm text-muted"><SlotIcon slot={slot.id} size={16} /> {slot.label}</p>
       <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="Meal name" aria-label="Meal name" />
       <textarea
         value={ingredients}

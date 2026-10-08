@@ -1,6 +1,6 @@
-# Bulking Tracker
+# Stacked
 
-A personal, mobile-first tracker for a lacto-vegetarian bulking plan: meals, macros, weight and training.
+A personal, mobile-first bulking tracker for a lacto-vegetarian bulking plan: meals, macros, weight and training.
 Everything is saved on your phone. There's no account and no server. It installs to your home screen and works offline.
 
 ## What it does
@@ -15,7 +15,8 @@ Everything is saved on your phone. There's no account and no server. It installs
   - calorie suggestions (±200 cal) when progress is too slow or too fast
   - training sessions
   - weekly history
-- **Settings:** targets, goal, meal times, a whey toggle, the Gemini API key, backup export/import, and reset.
+- **Settings:** appearance (dark, light or match phone), targets, goal, meal times, a whey toggle, the Gemini API key, passcode, backup export/import, and reset.
+- **Design:** black-and-gold theme (dark by default), custom icons, smooth tab transitions, animated rings and numbers, a small vibration when you tick things off (Android), and a celebration when you hit your protein target.
 
 ## What you need
 
@@ -113,7 +114,7 @@ All the default plan data lives in **[`src/data/plan.ts`](src/data/plan.ts)**: t
 
 ## App icons
 
-The icons are generated from `public/icon.svg`. After changing the SVG, run `npm run icons`.
+The Stacked icons are generated from `public/icon.svg`. After changing the SVG, run `npm run icons`.
 
 ## Project layout
 
@@ -132,6 +133,7 @@ src/
     openFoodFacts.ts    barcode → product macros
     gemini.ts           AI estimates from text and/or photos (Gemini API)
     lock.ts             passcode lock (stored as a hash)
+    feel.ts             haptics, page transitions, count-up numbers
     image.ts            shrinks photos before upload
     storage.ts          what's saved on the phone
   store/                app state + automatic saving (localStorage)

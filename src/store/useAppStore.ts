@@ -9,6 +9,7 @@ import {
   SCHEMA_VERSION,
   STORAGE_KEY,
   type AppData,
+  type ThemeSetting,
 } from '../lib/storage';
 import * as day from '../lib/daylog';
 import * as edits from '../lib/planEdits';
@@ -76,6 +77,8 @@ interface Actions {
   // Passcode lock
   setLockEnabled: (enabled: boolean) => void;
   setPinHash: (hash: string) => void;
+
+  setTheme: (theme: ThemeSetting) => void;
 }
 
 export type AppState = AppData & Actions;
@@ -254,6 +257,8 @@ export const useAppStore = create<AppState>()(
         setLockEnabled: (enabled) => set((s) => ({ settings: { ...s.settings, lockEnabled: enabled } })),
 
         setPinHash: (hash) => set((s) => ({ settings: { ...s.settings, pinHash: hash } })),
+
+        setTheme: (theme) => set((s) => ({ settings: { ...s.settings, theme } })),
       };
     },
     {

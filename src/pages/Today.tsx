@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { addDays, differenceInCalendarDays, format } from 'date-fns';
 import { getDayLog, useAppStore } from '../store/useAppStore';
@@ -15,7 +15,22 @@ import MealRow from '../components/MealRow';
 import MealSheet from '../components/MealSheet';
 import AddExtraSheet, { type AddTab } from '../components/AddExtraSheet';
 import SuggestionBanner from '../components/SuggestionBanner';
-import { CheckIcon, ChevronLeft, ChevronRight, PlusIcon, ScaleIcon, XIcon } from '../components/icons';
+import {
+  BarcodeIcon,
+  CheckIcon,
+  ChevronLeft,
+  ChevronRight,
+  DumbbellIcon,
+  FlameIcon,
+  HomeIcon,
+  PlusIcon,
+  ScaleIcon,
+  SchoolIcon,
+  SparkleIcon,
+  XIcon,
+} from '../components/icons';
+import Celebration from '../components/Celebration';
+import { haptic, useCountUp } from '../lib/feel';
 import { Bar, Card, fmt, MacroLine, Ring, SectionTitle } from '../components/ui';
 
 function dayTitle(date: string, today: string): string {
@@ -74,8 +89,23 @@ export default function Today() {
       state.addExtra(date, { name: meal.name, serving: '1 meal', base, multiplier: 1 });
     }
   };
-  const toggleTraining = () =>
-    trainedSessions.length ? trainedSessions.forEach((t) => state.deleteTraining(t.id)) : state.logTraining(date, '');
+  const toggleTraining = () => {
+    haptic(trainedSessions.length ? 8 : 18);
+    if (trainedSessions.length) trainedSessions.forEach((t) => state.deleteTraining(t.id));
+    else state.logTraining(date, '');
+  };
+
+  // Celebrate the moment protein (or calories) reaches the target today.
+  const [celebrate, setCelebrate] = useState<string | null>(null);
+  const prev = useRef({ date, protein: eaten.protein, calories: eaten.calories });
+  useEffect(() => {
+    const p = prev.current;
+    if (isToday && p.date === date) {
+      if (p.protein < log.targets.protein && eaten.protein >= log.targets.protein) setCelebrate('Protein target hit');
+      else if (p.calories < log.targets.calories && eaten.calories >= log.targets.calories) setCelebrate('Calorie target reached');
+    }
+    prev.current = { date, protein: eaten.protein, calories: eaten.calories };
+  }, [date, isToday, eaten.protein, eaten.calories, log.targets.protein, log.targets.calories]);
 
   return (
     <main>
@@ -84,7 +114,7 @@ export default function Today() {
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted">
-              {isToday ? `${greeting(now)} 👋` : format(fromDateStr(date), 'EEEE d MMMM')}
+              {isToday ? greeting(now) : format(fromDateStr(date), 'EEEE d MMMM')}
             </p>
             <h1 className="text-[28px] leading-tight font-extrabold tracking-tight">{dayTitle(date, today)}</h1>
           </div>
@@ -110,10 +140,11 @@ export default function Today() {
         <div className="mt-3 flex items-center gap-2">
           <button
             onClick={() => state.setDayType(date, log.dayType === 'school' ? 'home' : 'school')}
-            className="rounded-full bg-card px-3 py-1.5 text-sm font-semibold shadow-card active:scale-95"
+            className="flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-sm font-semibold shadow-card active:scale-95"
             aria-label={`${log.dayType === 'school' ? 'School' : 'Home'} day. Tap to switch.`}
           >
-            {log.dayType === 'school' ? '🏫 School day' : '🏠 Home day'}
+            {log.dayType === 'school' ? <SchoolIcon size={16} className="text-accent" /> : <HomeIcon size={16} className="text-accent" />}
+            {log.dayType === 'school' ? 'School day' : 'Home day'}
           </button>
           {!isToday && (
             <button onClick={() => setPicked(null)} className="rounded-full bg-accent-soft px-3 py-1.5 text-sm font-semibold text-accent">
@@ -123,7 +154,8 @@ export default function Today() {
         </div>
       </header>
 
-      <Hero eaten={eaten} upcoming={upcoming} targets={log.targets} message={dayHeadline(log, isToday)} />
+      <Hero eaten={eaten} upcoming={upcoming} targets={log.targets} message={dayHeadline(log, isToday)} meals={counts} />
+      {celebrate && <Celebration key={celebrate} text={celebrate} onDone={() => setCelebrate(null)} />}
 
       {/* Nudges: only shown when they matter */}
       {isToday && suggestion && <SuggestionBanner suggestion={suggestion} targets={state.targets} compact />}
@@ -143,7 +175,7 @@ export default function Today() {
 
       {ideas.length > 0 && (
         <Card tone="accent">
-          <p className="font-semibold">Protein top-up 💪</p>
+          <p className="flex items-center gap-1.5 font-semibold"><FlameIcon size={18} className="text-accent" /> Protein top-up</p>
           <p className="mt-0.5 text-sm text-muted">
             About {fmt(Math.ceil(gap))} g more would hit {fmt(log.targets.protein)} g today. Tap one to add it:
           </p>
@@ -183,7 +215,10 @@ export default function Today() {
               slot={slot}
               log={log}
               onOpen={() => setOpenSlot(slot)}
-              onToggleEaten={() => state.setSlotStatus(date, slot.id, log.slots[slot.id].status === 'eaten' ? 'planned' : 'eaten')}
+              onToggleEaten={() => {
+                haptic(log.slots[slot.id].status === 'eaten' ? 8 : 18);
+                state.setSlotStatus(date, slot.id, log.slots[slot.id].status === 'eaten' ? 'planned' : 'eaten');
+              }}
             />
           ))}
         </ul>
@@ -220,8 +255,8 @@ export default function Today() {
           {(
             [
               ['list', <PlusIcon key="i" size={20} />, 'Add food'],
-              ['barcode', <span key="i" className="text-lg leading-none">▥</span>, 'Barcode'],
-              ['ai', <span key="i" className="text-lg leading-none">✨</span>, 'AI estimate'],
+              ['barcode', <BarcodeIcon key="i" size={20} />, 'Barcode'],
+              ['ai', <SparkleIcon key="i" size={20} />, 'AI estimate'],
             ] as const
           ).map(([tab, icon, label]) => (
             <button
@@ -242,8 +277,8 @@ export default function Today() {
       </SectionTitle>
       <Card flush>
         <button onClick={toggleTraining} className="flex w-full items-center gap-3 px-4 py-3 text-left" aria-pressed={trainedSessions.length > 0}>
-          <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl ${trainedSessions.length ? 'bg-accent-soft' : 'bg-track'}`}>
-            🏋️
+          <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${trainedSessions.length ? 'bg-accent-soft text-accent' : 'bg-track text-muted'}`}>
+            <DumbbellIcon size={22} />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">{trainedSessions.length ? 'Workout done!' : isToday ? 'Trained today?' : 'Trained this day?'}</span>
@@ -279,38 +314,60 @@ export default function Today() {
   );
 }
 
-/** The colourful summary card: calorie ring plus protein / carbs / fat. */
-function Hero({ eaten, upcoming, targets, message }: { eaten: Macros; upcoming: Macros; targets: Macros; message: string }) {
+/** The "membership card" summary: calorie ring plus protein / carbs / fat. */
+function Hero({
+  eaten,
+  upcoming,
+  targets,
+  message,
+  meals,
+}: {
+  eaten: Macros;
+  upcoming: Macros;
+  targets: Macros;
+  message: string;
+  meals: { planned: number; eaten: number; skipped: number };
+}) {
+  const calories = useCountUp(eaten.calories);
   const calToGo = Math.round(targets.calories - eaten.calories);
-  const rows: { key: 'protein' | 'carbs' | 'fat'; label: string }[] = [
-    { key: 'protein', label: 'Protein' },
-    { key: 'carbs', label: 'Carbs' },
-    { key: 'fat', label: 'Fat' },
+  const total = meals.planned + meals.eaten + meals.skipped;
+  const rows: { key: 'protein' | 'carbs' | 'fat'; label: string; bar: string }[] = [
+    { key: 'protein', label: 'Protein', bar: 'bg-protein' },
+    { key: 'carbs', label: 'Carbs', bar: 'bg-carbs' },
+    { key: 'fat', label: 'Fat', bar: 'bg-fat' },
   ];
   return (
-    <section className="mx-4 mb-3 overflow-hidden rounded-[28px] bg-gradient-to-br from-hero-from to-hero-to p-5 text-white shadow-float">
+    <section className="hero-surface mx-4 mb-3 overflow-hidden rounded-[30px] p-5 shadow-float">
+      <div className="mb-4 flex items-center justify-between text-xs font-semibold tracking-[0.14em] text-muted uppercase">
+        <span>Daily fuel</span>
+        <span className="tracking-normal normal-case">
+          <span className="text-accent">{meals.eaten}</span> / {total} meals
+        </span>
+      </div>
       <div className="flex items-center gap-5">
-        <Ring value={eaten.calories} upcoming={upcoming.calories} target={targets.calories} size={128} stroke={12} color="#ffffff">
-          <span className="text-[26px] leading-none font-extrabold tabular-nums">{fmt(eaten.calories)}</span>
-          <span className="mt-1 text-xs text-white/80">of {fmt(targets.calories)} cal</span>
+        <Ring value={eaten.calories} upcoming={upcoming.calories} target={targets.calories} size={132} stroke={11} color="var(--color-accent)" trackColor="rgb(255 255 255 / 0.08)">
+          <span className="num text-[28px] leading-none font-extrabold">{fmt(Math.round(calories))}</span>
+          <span className="mt-1 text-[11px] text-muted">of {fmt(targets.calories)} cal</span>
         </Ring>
-        <div className="min-w-0 flex-1 space-y-3">
-          {rows.map(({ key, label }) => {
+        <div className="min-w-0 flex-1 space-y-3.5">
+          {rows.map(({ key, label, bar }) => {
             const toGo = Math.round(targets[key] - eaten[key]);
             return (
               <div key={key}>
-                <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
+                <div className="mb-1.5 flex items-baseline justify-between gap-2 text-sm">
                   <span className="font-semibold">{label}</span>
-                  <span className="text-xs text-white/85 tabular-nums">{toGo > 0 ? `${toGo} g to go` : 'Done ✓'}</span>
+                  <span className="num text-xs text-muted">
+                    {toGo > 0 ? `${toGo} g left` : <span className="inline-flex items-center gap-0.5 text-accent"><CheckIcon size={12} /> Done</span>}
+                  </span>
                 </div>
-                <Bar value={eaten[key]} upcoming={upcoming[key]} target={targets[key]} color="bg-white" track="bg-white/20" />
+                <Bar value={eaten[key]} upcoming={upcoming[key]} target={targets[key]} color={bar} height="h-1.5" />
               </div>
             );
           })}
         </div>
       </div>
-      <p className="mt-4 text-[15px] font-medium text-white/95">
-        {calToGo > 0 && <span className="font-bold">{fmt(calToGo)} cal to go. </span>}
+      <p className="mt-5 border-t border-line pt-4 text-[15px] text-ink/90">
+        {calToGo > 0 && <span className="font-bold text-accent">{fmt(calToGo)} cal to go. </span>}
         {message}
       </p>
     </section>

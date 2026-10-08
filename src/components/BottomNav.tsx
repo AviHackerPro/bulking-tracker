@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router';
+import { NavLink, useLocation, useNavigate } from 'react-router';
 import type { ReactNode } from 'react';
+import { haptic, withTransition } from '../lib/feel';
 import { PlanIcon, ProgressIcon, SettingsIcon, TodayIcon } from './icons';
 
 const tabs: { to: string; label: string; icon: ReactNode }[] = [
@@ -10,9 +11,12 @@ const tabs: { to: string; label: string; icon: ReactNode }[] = [
 ];
 
 export default function BottomNav() {
+  const navigate = useNavigate();
+  const { pathname, search } = useLocation();
+
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card/90 backdrop-blur-lg"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-canvas/80 backdrop-blur-xl [view-transition-name:bottom-nav]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="mx-auto flex max-w-lg px-2">
@@ -21,13 +25,26 @@ export default function BottomNav() {
             <NavLink
               to={t.to}
               end={t.to === '/'}
+              onClick={(e) => {
+                e.preventDefault();
+                const here = pathname === t.to && !search;
+                if (here) return;
+                haptic(8);
+                withTransition(() => navigate(t.to));
+              }}
               className={({ isActive }) =>
-                `group flex flex-col items-center gap-0.5 pt-2 pb-2.5 text-[11px] font-semibold ${isActive ? 'text-accent' : 'text-muted'}`
+                `flex flex-col items-center gap-0.5 pt-2 pb-2.5 text-[11px] font-semibold tracking-wide transition-colors ${
+                  isActive ? 'text-accent' : 'text-muted'
+                }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <span className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${isActive ? 'bg-accent-soft' : ''}`}>
+                  <span
+                    className={`flex h-8 w-14 items-center justify-center rounded-full transition-all duration-300 ${
+                      isActive ? 'bg-accent-soft' : ''
+                    }`}
+                  >
                     {t.icon}
                   </span>
                   {t.label}

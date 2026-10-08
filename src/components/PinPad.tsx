@@ -51,7 +51,7 @@ export default function PinPad({
   });
 
   const keyClass = hero
-    ? 'bg-white/15 text-white active:bg-white/30'
+    ? 'bg-white/[0.07] text-ink ring-1 ring-white/10 active:bg-white/20'
     : 'bg-track text-ink active:bg-line';
 
   return (
@@ -62,7 +62,7 @@ export default function PinPad({
             key={i}
             className={`h-3.5 w-3.5 rounded-full border-2 transition-colors duration-150 ${
               hero
-                ? i < pin.length ? 'border-white bg-white' : 'border-white/60'
+                ? i < pin.length ? 'border-accent bg-accent' : 'border-white/35'
                 : i < pin.length ? 'border-accent bg-accent' : 'border-line'
             }`}
           />
@@ -80,7 +80,7 @@ export default function PinPad({
               disabled={disabled}
               aria-label={k === 'back' ? 'Delete' : k}
               className={`flex aspect-square items-center justify-center rounded-full text-[28px] font-semibold transition select-none active:scale-95 ${
-                k === 'back' ? (hero ? 'text-white/90' : 'text-muted') : keyClass
+                k === 'back' ? 'text-muted' : keyClass
               }`}
             >
               {k === 'back' ? (

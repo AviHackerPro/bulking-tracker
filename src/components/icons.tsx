@@ -53,3 +53,74 @@ export const ScaleIcon = (p: IconProps) => (
     <path d="M8.5 9.5a5 5 0 017 0M12 9.5l1.2-1.7" />
   </Icon>
 );
+
+// Meal slots
+export const BreakfastIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.5 11h17a8.5 8.5 0 01-17 0z" />
+    <path d="M8 21h8M9 7.5c0-1 1-1.5 1-2.5s-1-1.5-1-2.5M14 7.5c0-1 1-1.5 1-2.5s-1-1.5-1-2.5" />
+  </Icon>
+);
+export const RecessIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 13.5L12 6l8 7.5" />
+    <path d="M5 13.5h14v3.5a2 2 0 01-2 2H7a2 2 0 01-2-2z" />
+    <path d="M5 16h14" />
+  </Icon>
+);
+export const LunchIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3.5" y="8" width="17" height="12" rx="3" />
+    <path d="M9 8V6a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 6v2M3.5 13h17" />
+  </Icon>
+);
+export const SnackIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 7.5c-2-1.5-7-1-7 4.5 0 4 3 8 5 8 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 5-4 5-8 0-5.5-5-6-7-4.5z" />
+    <path d="M12 7.5c0-2 1-3.5 3-4" />
+  </Icon>
+);
+export const DinnerIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="5.5" />
+    <path d="M3 4v5a2 2 0 002 2v9M5 4v4M21 4c-1.5 1-2 3-2 6h2v10" />
+  </Icon>
+);
+
+// Actions & status
+export const SparkleIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    <path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z" />
+  </Icon>
+);
+export const BarcodeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2" />
+    <path d="M8 8v8M11 8v8M14 8v8M17 8v8" />
+  </Icon>
+);
+export const CameraIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 8.5a2 2 0 012-2h1.5l1.5-2h6l1.5 2H18a2 2 0 012 2V17a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
+    <circle cx="12" cy="12.5" r="3.5" />
+  </Icon>
+);
+export const ImageIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="3" />
+    <circle cx="9" cy="10" r="1.5" />
+    <path d="M20.5 16l-5-5-8.5 8.5" />
+  </Icon>
+);
+export const NoteIcon = (p: IconProps) => <Icon {...p}><path d="M5 5h14v10l-4 4H5z" /><path d="M15 19v-4h4M8 9h8M8 12.5h5" /></Icon>;
+export const SchoolIcon = (p: IconProps) => <Icon {...p}><path d="M3 9l9-4.5L21 9l-9 4.5z" /><path d="M7 11v5c1.5 1.5 3 2 5 2s3.5-.5 5-2v-5M21 9v5" /></Icon>;
+export const HomeIcon = (p: IconProps) => <Icon {...p}><path d="M4 10.5L12 4l8 6.5V19a1 1 0 01-1 1h-4.5v-5.5h-5V20H5a1 1 0 01-1-1z" /></Icon>;
+export const TargetIcon = (p: IconProps) => <Icon {...p}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></Icon>;
+export const TrophyIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M8 4h8v5a4 4 0 01-8 0z" />
+    <path d="M8 6H5v1.5A3.5 3.5 0 008.5 11M16 6h3v1.5a3.5 3.5 0 01-3.5 3.5M12 13v4M8.5 20h7M10 17h4v3h-4z" />
+  </Icon>
+);
+export const FlameIcon = (p: IconProps) => <Icon {...p}><path d="M12 21c4 0 6.5-2.7 6.5-6.3C18.5 10 13 8 13 3c-3 2-5.5 5-5 8.5C6.5 10.8 6 9.5 6 8.5 4.5 10 5.5 15 5.5 15c0 3.5 2.5 6 6.5 6z" /></Icon>;

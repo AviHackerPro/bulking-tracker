@@ -1,8 +1,9 @@
 // Shared building blocks. Every screen is made from these, so the look stays consistent.
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { reducedMotion } from '../lib/feel';
 import type { Macros, SlotId } from '../lib/types';
-import { XIcon } from './icons';
+import { BreakfastIcon, DinnerIcon, LunchIcon, RecessIcon, SnackIcon, XIcon } from './icons';
 
 // ----- Formatting ----------------------------------------------------
 
@@ -21,13 +22,19 @@ export const MACRO_META: Record<MacroKey, { label: string; unit: string; bar: st
   fat: { label: 'Fat', unit: 'g', bar: 'bg-fat', text: 'text-fat' },
 };
 
-export const SLOT_EMOJI: Record<SlotId, string> = {
-  breakfast: '🥣',
-  recess: '🥪',
-  lunch: '🌯',
-  afterSchool: '🍌',
-  dinner: '🍛',
+const SLOT_ICONS: Record<SlotId, (p: { size?: number; className?: string }) => ReactNode> = {
+  breakfast: BreakfastIcon,
+  recess: RecessIcon,
+  lunch: LunchIcon,
+  afterSchool: SnackIcon,
+  dinner: DinnerIcon,
 };
+
+/** Line icon for a meal slot. */
+export function SlotIcon({ slot, size = 22, className = '' }: { slot: SlotId; size?: number; className?: string }) {
+  const Icon = SLOT_ICONS[slot];
+  return <Icon size={size} className={className} />;
+}
 
 // ----- Layout --------------------------------------------------------
 
@@ -94,7 +101,7 @@ export function Segmented<T extends string>({
           role="tab"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`flex-1 rounded-xl px-3 py-2 transition-colors ${value === o.value ? 'bg-card text-ink shadow-card' : 'text-muted'}`}
+          className={`flex-1 rounded-xl px-3 py-2 transition-colors ${value === o.value ? 'bg-raised text-ink shadow-card' : 'text-muted'}`}
         >
           {o.label}
         </button>
@@ -108,7 +115,7 @@ export function Segmented<T extends string>({
 const BUTTON_BASE =
   'inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[15px] font-semibold transition active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100';
 export const buttonClass = {
-  primary: `${BUTTON_BASE} bg-accent text-accent-ink`,
+  primary: `${BUTTON_BASE} bg-gold-gradient text-[#17120a] shadow-glow`,
   soft: `${BUTTON_BASE} bg-accent-soft text-accent`,
   ghost: `${BUTTON_BASE} bg-track text-ink`,
   danger: `${BUTTON_BASE} bg-warn text-card`,
@@ -195,13 +202,14 @@ export function Bar({
   track?: string;
   height?: string;
 }) {
-  const pct = (n: number) => (target > 0 ? Math.max(0, Math.min(100, (n / target) * 100)) : 0);
+  const shown = useMounted();
+  const pct = (n: number) => (shown && target > 0 ? Math.max(0, Math.min(100, (n / target) * 100)) : 0);
   const solid = pct(value);
   const light = Math.max(0, pct(value + upcoming) - solid);
   return (
     <div className={`flex ${height} overflow-hidden rounded-full ${track}`}>
-      <div className={`h-full rounded-full ${color} transition-[width] duration-500`} style={{ width: `${solid}%` }} />
-      <div className={`h-full ${color} opacity-30 transition-[width] duration-500`} style={{ width: `${light}%` }} />
+      <div className={`h-full rounded-full ${color} transition-[width] duration-700 ease-out`} style={{ width: `${solid}%` }} />
+      <div className={`h-full ${color} opacity-30 transition-[width] duration-700 ease-out`} style={{ width: `${light}%` }} />
     </div>
   );
 }
@@ -226,9 +234,10 @@ export function Ring({
   trackColor?: string;
   children?: ReactNode;
 }) {
+  const shown = useMounted();
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const frac = (n: number) => (target > 0 ? Math.max(0, Math.min(1, n / target)) : 0);
+  const frac = (n: number) => (shown && target > 0 ? Math.max(0, Math.min(1, n / target)) : 0);
   const solid = frac(value);
   const withUpcoming = frac(value + upcoming);
   return (
@@ -238,11 +247,12 @@ export function Ring({
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeOpacity={0.35} strokeWidth={stroke}
           strokeLinecap="round" strokeDasharray={`${withUpcoming * c} ${c}`}
+          style={{ transition: 'stroke-dasharray 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
         />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
           strokeLinecap="round" strokeDasharray={`${solid * c} ${c}`}
-          style={{ transition: 'stroke-dasharray 0.5s ease' }}
+          style={{ transition: 'stroke-dasharray 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
@@ -310,4 +320,15 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       <span className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
     </button>
   );
+}
+
+/** False for one frame after mounting, so bars and rings can animate in from empty. */
+function useMounted(): boolean {
+  const [mounted, setMounted] = useState(reducedMotion);
+  useEffect(() => {
+    if (mounted) return;
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
+    return () => cancelAnimationFrame(id);
+  }, [mounted]);
+  return mounted;
 }

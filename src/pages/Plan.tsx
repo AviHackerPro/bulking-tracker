@@ -7,7 +7,7 @@ import { mealsForSlot, orderedSlots, plannedWeekTotals } from '../lib/totals';
 import type { Meal, SlotConfig, Weekday } from '../lib/types';
 import MealEditor from '../components/MealEditor';
 import { ChevronDown, ChevronRight, PlusIcon } from '../components/icons';
-import { buttonClass, Card, fmt, MacroLine, PageHeader, Segmented, SectionTitle, Sheet, SLOT_EMOJI } from '../components/ui';
+import { buttonClass, Card, fmt, MacroLine, PageHeader, Segmented, SectionTitle, Sheet, SlotIcon } from '../components/ui';
 
 type Tab = 'week' | 'meals';
 
@@ -75,7 +75,7 @@ function WeekTab() {
         </div>
         <p className={`mt-4 rounded-2xl px-3 py-2 text-sm ${lowDays.length ? 'bg-warn-soft' : 'bg-accent-soft'}`}>
           {lowDays.length === 0
-            ? `✓ Every day reaches ${targets.protein} g protein`
+            ? `Every day reaches ${targets.protein} g protein`
             : `${lowDays.map((d) => WEEKDAY_LABELS[d]).join(', ')} ${lowDays.length === 1 ? 'is' : 'are'} under ${targets.protein} g protein`}
         </p>
       </Card>
@@ -116,7 +116,7 @@ function WeekTab() {
             const current = meals.find((m) => m.id === rotation[day][slot.id]);
             return (
               <li key={slot.id} className="relative flex items-center gap-3 px-4 py-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-track text-xl">{SLOT_EMOJI[slot.id]}</span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-track text-accent"><SlotIcon slot={slot.id} /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-medium text-muted">{slot.label}</span>
                   <span className="block truncate font-semibold">{current?.name ?? 'Choose a meal'}</span>
@@ -187,7 +187,7 @@ function MealsTab() {
                 </button>
               }
             >
-              {SLOT_EMOJI[slot.id]} {slot.label}
+              <span className="flex items-center gap-2"><SlotIcon slot={slot.id} size={18} className="text-accent" />{slot.label}</span>
             </SectionTitle>
             <Card flush>
               <ul className="divide-y divide-line">

@@ -80,7 +80,7 @@ function WeightTab() {
     <>
       {justAccepted !== null && (
         <Card tone="accent">
-          <p className="font-semibold">Targets updated 🎯</p>
+          <p className="font-semibold">Targets updated</p>
           <p className="mt-0.5 text-sm">
             New daily target: {fmt(targets.calories)} cal. Protein stays at {targets.protein} g. Give it a couple of weeks.
           </p>
@@ -129,7 +129,7 @@ function WeightTab() {
             <p className="text-xs text-muted">{rate !== null ? `Your pace ${signed(rate)}/wk` : 'Your pace'}</p>
             <p className="font-bold">
               {current !== null && current >= goal.goalWeightKg
-                ? 'Goal reached! 🎉'
+                ? 'Goal reached!'
                 : rate === null
                   ? <span className="font-medium text-muted">After 2 weeks</span>
                   : projected
@@ -345,7 +345,7 @@ function TrainingTab() {
             />
             <button type="submit" className={`${buttonClass.primary} flex-1`}>Log session</button>
           </div>
-          {saved && <p className="text-sm font-semibold text-accent">Logged. Nice work! 💪</p>}
+          {saved && <p className="text-sm font-semibold text-accent">Logged. Nice work!</p>}
         </form>
       </Card>
 

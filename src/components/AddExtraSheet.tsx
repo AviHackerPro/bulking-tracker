@@ -61,7 +61,7 @@ export default function AddExtraSheet({ openTab, onClose, onAdd, onLogMeal }: Pr
         options={[
           { value: 'list', label: 'Foods' },
           { value: 'barcode', label: 'Barcode' },
-          { value: 'ai', label: 'AI \u2728' },
+          { value: 'ai', label: 'AI' },
           { value: 'custom', label: 'Custom' },
         ]}
       />

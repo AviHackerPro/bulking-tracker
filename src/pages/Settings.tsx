@@ -6,11 +6,12 @@ import { backupFileName, makeBackup, parseBackup } from '../lib/backup';
 import { DEFAULT_GEMINI_MODEL, friendlyError, GEMINI_MODELS, testGeminiKey } from '../lib/gemini';
 import { DEFAULT_PIN_HASH, hashPin, verifyPin } from '../lib/lock';
 import PinPad from '../components/PinPad';
+import { HomeIcon, SchoolIcon } from '../components/icons';
 import { fromDateStr, todayStr } from '../lib/dates';
 import { caloriesFromMacros, orderedSlots } from '../lib/totals';
 import type { AppData } from '../lib/storage';
 import type { Macros } from '../lib/types';
-import { buttonClass, Card, fmt, inputClass, PageHeader, SectionTitle, Sheet, SLOT_EMOJI, Toggle, UnitInput } from '../components/ui';
+import { buttonClass, Card, fmt, inputClass, PageHeader, SectionTitle, Segmented, Sheet, SlotIcon, Toggle, UnitInput } from '../components/ui';
 
 export default function Settings() {
   // Bumped after a backup is restored, so the forms reload their values.
@@ -18,6 +19,7 @@ export default function Settings() {
   return (
     <main>
       <PageHeader title="Settings" />
+      <AppearanceCard />
       <TargetsCard key={`t${version}`} />
       <GoalCard key={`g${version}`} />
       <MealTimesCard />
@@ -30,6 +32,29 @@ export default function Settings() {
         Everything is saved on this phone only. No account, no server.
       </p>
     </main>
+  );
+}
+
+// ----- Appearance ----------------------------------------------------------
+
+function AppearanceCard() {
+  const theme = useAppStore((s) => s.settings.theme ?? 'dark');
+  const setTheme = useAppStore((s) => s.setTheme);
+  return (
+    <>
+      <SectionTitle>Appearance</SectionTitle>
+      <Card>
+        <Segmented
+          value={theme}
+          onChange={setTheme}
+          options={[
+            { value: 'dark', label: 'Dark' },
+            { value: 'light', label: 'Light' },
+            { value: 'system', label: 'Match phone' },
+          ]}
+        />
+      </Card>
+    </>
   );
 }
 
@@ -163,11 +188,11 @@ function MealTimesCard() {
         <ul className="divide-y divide-line">
           {orderedSlots(slots).map((s) => (
             <li key={s.id} className="px-5 py-3">
-              <p className="mb-2 font-semibold">{SLOT_EMOJI[s.id]} {s.label}</p>
+              <p className="mb-2 flex items-center gap-2 font-semibold"><SlotIcon slot={s.id} size={18} className="text-accent" /> {s.label}</p>
               <div className="grid grid-cols-2 gap-2">
                 {(['schoolTime', 'homeTime'] as const).map((kind) => (
                   <label key={kind} className="flex items-center gap-1.5 rounded-2xl bg-track px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-accent">
-                    <span aria-hidden>{kind === 'schoolTime' ? '🏫' : '🏠'}</span>
+                    <span className="text-muted" aria-hidden>{kind === 'schoolTime' ? <SchoolIcon size={16} /> : <HomeIcon size={16} />}</span>
                     <input
                       type="time"
                       value={s[kind]}
@@ -181,7 +206,7 @@ function MealTimesCard() {
             </li>
           ))}
         </ul>
-        <p className="border-t border-line px-5 py-3 text-xs text-muted">🏫 School days · 🏠 Weekends and holidays. Changes save straight away.</p>
+        <p className="border-t border-line px-5 py-3 text-xs text-muted">School days and home days (weekends, holidays). Changes save straight away.</p>
       </Card>
     </>
   );
@@ -228,7 +253,7 @@ function AiCard() {
     setStatus(null);
     try {
       await testGeminiKey(key.trim(), model);
-      setStatus({ text: 'Key works! Photo analysis is ready ✓', ok: true });
+      setStatus({ text: 'Key works. AI estimates are ready.', ok: true });
     } catch (e) {
       setStatus({ text: friendlyError(e), ok: false });
     } finally {
@@ -298,7 +323,7 @@ function SecurityCard() {
     current: 'Enter your current passcode',
     new: 'Choose a new 4-digit passcode',
     confirm: 'Enter it again to confirm',
-    done: 'Passcode changed ✓',
+    done: 'Passcode changed',
   };
 
   return (
@@ -402,7 +427,7 @@ function BackupCard({ onRestored }: { onRestored: () => void }) {
           {last === null || last === undefined
             ? 'You haven’t made a backup yet. Save one now and then every week or two.'
             : daysSince === 0
-              ? 'Last backup: today ✓'
+              ? 'Last backup: today'
               : `Last backup: ${daysSince} ${daysSince === 1 ? 'day' : 'days'} ago${daysSince! >= 14 ? '. Time for a new one!' : ''}`}
         </p>
         <div className="mt-4 flex gap-2">

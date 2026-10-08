@@ -42,7 +42,11 @@ export interface AppSettings {
   lockEnabled?: boolean;
   /** Hash of the passcode, never the digits. Missing means the default passcode. */
   pinHash?: string;
+  /** Colour theme. Missing means dark. */
+  theme?: ThemeSetting;
 }
+
+export type ThemeSetting = 'dark' | 'light' | 'system';
 
 /** All saved data. New fields get added here in later phases. */
 export interface AppData {
@@ -74,7 +78,7 @@ export function createInitialData(): AppData {
     meals: plan.meals,
     rotation: plan.rotation,
     foods: plan.foods,
-    settings: { wheyEnabled: false, lastBackupDate: null, lockEnabled: true, pinHash: DEFAULT_PIN_HASH },
+    settings: { wheyEnabled: false, lastBackupDate: null, lockEnabled: true, pinHash: DEFAULT_PIN_HASH, theme: 'dark' },
     weighIns: [],
     dayLogs: {},
     targetChanges: [],
