@@ -2,8 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { reducedMotion } from '../lib/feel';
-import type { Macros, SlotId } from '../lib/types';
-import { BreakfastIcon, DinnerIcon, LunchIcon, RecessIcon, SnackIcon, XIcon } from './icons';
+import type { Macros } from '../lib/types';
+import { XIcon } from './icons';
 
 // ----- Formatting ----------------------------------------------------
 
@@ -22,19 +22,6 @@ export const MACRO_META: Record<MacroKey, { label: string; unit: string; bar: st
   fat: { label: 'Fat', unit: 'g', bar: 'bg-fat', text: 'text-fat' },
 };
 
-const SLOT_ICONS: Record<SlotId, (p: { size?: number; className?: string }) => ReactNode> = {
-  breakfast: BreakfastIcon,
-  recess: RecessIcon,
-  lunch: LunchIcon,
-  afterSchool: SnackIcon,
-  dinner: DinnerIcon,
-};
-
-/** Line icon for a meal slot. */
-export function SlotIcon({ slot, size = 22, className = '' }: { slot: SlotId; size?: number; className?: string }) {
-  const Icon = SLOT_ICONS[slot];
-  return <Icon size={size} className={className} />;
-}
 
 // ----- Layout --------------------------------------------------------
 

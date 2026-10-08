@@ -11,7 +11,7 @@ import { fromDateStr, todayStr } from '../lib/dates';
 import { caloriesFromMacros, orderedSlots } from '../lib/totals';
 import type { AppData } from '../lib/storage';
 import type { Macros } from '../lib/types';
-import { buttonClass, Card, fmt, inputClass, PageHeader, SectionTitle, Segmented, Sheet, SlotIcon, Toggle, UnitInput } from '../components/ui';
+import { buttonClass, Card, fmt, inputClass, PageHeader, SectionTitle, Segmented, Sheet, Toggle, UnitInput } from '../components/ui';
 
 export default function Settings() {
   // Bumped after a backup is restored, so the forms reload their values.
@@ -188,7 +188,7 @@ function MealTimesCard() {
         <ul className="divide-y divide-line">
           {orderedSlots(slots).map((s) => (
             <li key={s.id} className="px-5 py-3">
-              <p className="mb-2 flex items-center gap-2 font-semibold"><SlotIcon slot={s.id} size={18} className="text-accent" /> {s.label}</p>
+              <p className="mb-2 font-semibold">{s.label}</p>
               <div className="grid grid-cols-2 gap-2">
                 {(['schoolTime', 'homeTime'] as const).map((kind) => (
                   <label key={kind} className="flex items-center gap-1.5 rounded-2xl bg-track px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-accent">

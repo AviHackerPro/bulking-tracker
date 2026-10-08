@@ -7,7 +7,7 @@ import { mealsForSlot, orderedSlots, plannedWeekTotals } from '../lib/totals';
 import type { Meal, SlotConfig, Weekday } from '../lib/types';
 import MealEditor from '../components/MealEditor';
 import { ChevronDown, ChevronRight, PlusIcon } from '../components/icons';
-import { buttonClass, Card, fmt, MacroLine, PageHeader, Segmented, SectionTitle, Sheet, SlotIcon } from '../components/ui';
+import { buttonClass, Card, fmt, MacroLine, PageHeader, Segmented, SectionTitle, Sheet } from '../components/ui';
 
 type Tab = 'week' | 'meals';
 
@@ -116,7 +116,6 @@ function WeekTab() {
             const current = meals.find((m) => m.id === rotation[day][slot.id]);
             return (
               <li key={slot.id} className="relative flex items-center gap-3 px-4 py-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-track text-accent"><SlotIcon slot={slot.id} /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-medium text-muted">{slot.label}</span>
                   <span className="block truncate font-semibold">{current?.name ?? 'Choose a meal'}</span>
@@ -187,7 +186,7 @@ function MealsTab() {
                 </button>
               }
             >
-              <span className="flex items-center gap-2"><SlotIcon slot={slot.id} size={18} className="text-accent" />{slot.label}</span>
+              {slot.label}
             </SectionTitle>
             <Card flush>
               <ul className="divide-y divide-line">

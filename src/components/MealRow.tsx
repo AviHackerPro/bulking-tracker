@@ -2,7 +2,7 @@ import { formatTime } from '../lib/dates';
 import { isSwapped } from '../lib/daylog';
 import type { DayLog, SlotConfig } from '../lib/types';
 import { CheckIcon } from './icons';
-import { MacroLine, SlotIcon } from './ui';
+import { MacroLine } from './ui';
 
 /** One meal slot as a slim row: tap the row for details, tap the circle to tick it off. */
 export default function MealRow({
@@ -21,21 +21,18 @@ export default function MealRow({
   const eaten = entry.status === 'eaten';
   const skipped = entry.status === 'skipped';
   const label = school ? slot.label : slot.homeLabel;
-  const time = formatTime(school ? slot.schoolTime : slot.homeTime);
+  const [clock, period] = formatTime(school ? slot.schoolTime : slot.homeTime).split(' ');
 
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <button onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`${label}: ${entry.meal?.name ?? 'no meal'}. Open details`}>
-        <span
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-            eaten ? 'bg-accent-soft text-accent' : 'bg-track text-muted'
-          } ${skipped ? 'opacity-40' : ''}`}
-        >
-          <SlotIcon slot={slot.id} />
+        <span className={`w-12 shrink-0 text-center leading-tight ${skipped ? 'opacity-40' : ''}`}>
+          <span className={`num block text-[15px] font-bold ${eaten ? 'text-accent' : ''}`}>{clock}</span>
+          <span className="block text-[11px] font-semibold tracking-wide text-muted uppercase">{period}</span>
         </span>
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
-            {time} · {label}
+            {label}
             {isSwapped(log, slot.id) && <span className="rounded-md bg-track px-1.5 py-px text-[10px] font-semibold">Swapped</span>}
           </span>
           <span className={`block truncate font-semibold ${skipped ? 'text-muted line-through decoration-muted/40' : ''}`}>

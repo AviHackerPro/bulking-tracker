@@ -16,7 +16,7 @@ Everything is saved on your phone. There's no account and no server. It installs
   - training sessions
   - weekly history
 - **Settings:** appearance (dark, light or match phone), targets, goal, meal times, a whey toggle, the Gemini API key, passcode, backup export/import, and reset.
-- **Design:** black-and-gold theme (dark by default), custom icons, smooth tab transitions, animated rings and numbers, a small vibration when you tick things off (Android), and a celebration when you hit your protein target.
+- **Design:** black-and-gold theme (dark by default), custom icons, a timeline-style meal list, smooth tab transitions, animated rings and numbers, a small vibration when you tick things off (Android), and a celebration when you hit your protein target.
 
 ## What you need
 

@@ -54,39 +54,6 @@ export const ScaleIcon = (p: IconProps) => (
   </Icon>
 );
 
-// Meal slots
-export const BreakfastIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M3.5 11h17a8.5 8.5 0 01-17 0z" />
-    <path d="M8 21h8M9 7.5c0-1 1-1.5 1-2.5s-1-1.5-1-2.5M14 7.5c0-1 1-1.5 1-2.5s-1-1.5-1-2.5" />
-  </Icon>
-);
-export const RecessIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M4 13.5L12 6l8 7.5" />
-    <path d="M5 13.5h14v3.5a2 2 0 01-2 2H7a2 2 0 01-2-2z" />
-    <path d="M5 16h14" />
-  </Icon>
-);
-export const LunchIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <rect x="3.5" y="8" width="17" height="12" rx="3" />
-    <path d="M9 8V6a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 6v2M3.5 13h17" />
-  </Icon>
-);
-export const SnackIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M12 7.5c-2-1.5-7-1-7 4.5 0 4 3 8 5 8 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 5-4 5-8 0-5.5-5-6-7-4.5z" />
-    <path d="M12 7.5c0-2 1-3.5 3-4" />
-  </Icon>
-);
-export const DinnerIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="12" r="5.5" />
-    <path d="M3 4v5a2 2 0 002 2v9M5 4v4M21 4c-1.5 1-2 3-2 6h2v10" />
-  </Icon>
-);
-
 // Actions & status
 export const SparkleIcon = (p: IconProps) => (
   <Icon {...p}>

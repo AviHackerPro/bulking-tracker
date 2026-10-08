@@ -2,7 +2,7 @@ import { formatTime } from '../lib/dates';
 import { findMeal, mealsForSlot } from '../lib/totals';
 import type { DayLog, Meal, SlotConfig, SlotStatus } from '../lib/types';
 import { CheckIcon, SkipIcon, UndoIcon } from './icons';
-import { buttonClass, MacroGrid, MacroLine, Sheet, SlotIcon } from './ui';
+import { buttonClass, MacroGrid, MacroLine, Sheet } from './ui';
 
 /** Details for one meal slot: macros, ingredients, tick / skip, and swap options. */
 export default function MealSheet({
@@ -32,7 +32,7 @@ export default function MealSheet({
   return (
     <Sheet open onClose={onClose} title={meal?.name ?? 'Choose a meal'}>
       <p className="-mt-1 mb-4 text-sm text-muted">
-        <SlotIcon slot={slot.id} size={16} className="-mt-0.5 mr-1 inline" />{school ? slot.label : slot.homeLabel} · {formatTime(school ? slot.schoolTime : slot.homeTime)}
+        {school ? slot.label : slot.homeLabel} · {formatTime(school ? slot.schoolTime : slot.homeTime)}
         {slot.note && school && <span className="ml-2 rounded-md bg-track px-1.5 py-0.5 text-xs">{slot.note}</span>}
       </p>
 
