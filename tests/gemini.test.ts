@@ -32,13 +32,26 @@ describe('Gemini photo analysis', () => {
     expect(buildUserPrompt(meals, '')).not.toContain('Extra details');
   });
 
+  it('asks about the description when there is no photo', () => {
+    const prompt = buildUserPrompt(meals, '2 slices of margherita pizza and a mango lassi', false);
+    expect(prompt).toContain('Estimate the nutrition of what I ate: 2 slices of margherita pizza and a mango lassi');
+    expect(prompt).not.toContain('this photo');
+    expect(prompt).not.toContain('Extra details');
+  });
+
   it('builds both request shapes with the image and JSON schema', () => {
-    const a = buildInteractionsBody('gemini-3.8-flash', 'AAAA', 'image/jpeg', 'p');
+    const img = { base64: 'AAAA', mimeType: 'image/jpeg' };
+    const a = buildInteractionsBody('gemini-3.8-flash', img, 'p');
     expect(a.input[1]).toEqual({ type: 'image', data: 'AAAA', mime_type: 'image/jpeg' });
     expect(a.response_format.mime_type).toBe('application/json');
-    const b = buildGenerateContentBody('AAAA', 'image/jpeg', 'p');
+    const b = buildGenerateContentBody(img, 'p');
     expect(b.contents[0].parts[1]).toEqual({ inline_data: { mime_type: 'image/jpeg', data: 'AAAA' } });
     expect(b.generationConfig.responseMimeType).toBe('application/json');
+  });
+
+  it('sends text only when there is no photo', () => {
+    expect(buildInteractionsBody('gemini-3.8-flash', null, 'p').input).toEqual([{ type: 'text', text: 'p' }]);
+    expect(buildGenerateContentBody(null, 'p').contents[0].parts).toEqual([{ text: 'p' }]);
   });
 
   it('reads text from the Interactions API response', () => {

@@ -4,7 +4,7 @@ import { DEFAULT_GEMINI_MODEL, type AnalysedItem } from '../lib/gemini';
 import { scaleMacros } from '../lib/totals';
 import type { ExtraLog, Food, FoodCategory, Macros } from '../lib/types';
 import BarcodeScanner from './BarcodeScanner';
-import PhotoAnalyser from './PhotoAnalyser';
+import AiEstimator from './AiEstimator';
 import { XIcon } from './icons';
 import { buttonClass, fmt, inputClass, Segmented, Sheet, UnitInput } from './ui';
 
@@ -18,7 +18,7 @@ const CATEGORY_LABELS: Record<FoodCategory, string> = {
 const CATEGORY_ORDER: FoodCategory[] = ['saved', 'extra', 'protein', 'carb', 'fat'];
 const QUICK_MULTIPLIERS = [0.5, 1, 1.5, 2];
 
-export type AddTab = 'list' | 'barcode' | 'photo' | 'custom';
+export type AddTab = 'list' | 'barcode' | 'ai' | 'custom';
 
 interface Props {
   /** Which tab to open on, or null when closed. */
@@ -61,14 +61,14 @@ export default function AddExtraSheet({ openTab, onClose, onAdd, onLogMeal }: Pr
         options={[
           { value: 'list', label: 'Foods' },
           { value: 'barcode', label: 'Barcode' },
-          { value: 'photo', label: 'Photo' },
+          { value: 'ai', label: 'AI \u2728' },
           { value: 'custom', label: 'Custom' },
         ]}
       />
       {tab === 'list' && <FoodList foods={foods} wheyEnabled={settings.wheyEnabled} onAdd={add} onDelete={deleteFood} />}
       {tab === 'barcode' && <BarcodeScanner foods={foods} onAdd={add} onSave={saveFood} />}
-      {tab === 'photo' && (
-        <PhotoAnalyser
+      {tab === 'ai' && (
+        <AiEstimator
           apiKey={settings.geminiApiKey ?? ''}
           model={settings.geminiModel ?? DEFAULT_GEMINI_MODEL}
           meals={meals}

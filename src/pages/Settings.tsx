@@ -4,6 +4,8 @@ import { useAppStore } from '../store/useAppStore';
 import { defaultPlan } from '../data/plan';
 import { backupFileName, makeBackup, parseBackup } from '../lib/backup';
 import { DEFAULT_GEMINI_MODEL, friendlyError, GEMINI_MODELS, testGeminiKey } from '../lib/gemini';
+import { DEFAULT_PIN_HASH, hashPin, verifyPin } from '../lib/lock';
+import PinPad from '../components/PinPad';
 import { fromDateStr, todayStr } from '../lib/dates';
 import { caloriesFromMacros, orderedSlots } from '../lib/totals';
 import type { AppData } from '../lib/storage';
@@ -21,6 +23,7 @@ export default function Settings() {
       <MealTimesCard />
       <FoodListCard />
       <AiCard />
+      <SecurityCard />
       <BackupCard onRestored={() => setVersion((v) => v + 1)} />
       <ResetCard />
       <p className="mx-5 mt-6 text-center text-xs text-muted">
@@ -275,6 +278,85 @@ function AiCard() {
           Google may use them to improve its products, so only photograph food.
         </p>
       </Card>
+    </>
+  );
+}
+
+// ----- Passcode lock -----------------------------------------------------
+
+type PinStep = 'current' | 'new' | 'confirm' | 'done';
+
+function SecurityCard() {
+  const { settings, setLockEnabled, setPinHash } = useAppStore();
+  const lockOn = settings.lockEnabled ?? true;
+  const pinHash = settings.pinHash ?? DEFAULT_PIN_HASH;
+  const [step, setStep] = useState<PinStep | null>(null);
+  const [newPin, setNewPin] = useState('');
+  const [mismatch, setMismatch] = useState(false);
+
+  const titles: Record<PinStep, string> = {
+    current: 'Enter your current passcode',
+    new: 'Choose a new 4-digit passcode',
+    confirm: 'Enter it again to confirm',
+    done: 'Passcode changed ✓',
+  };
+
+  return (
+    <>
+      <SectionTitle>Passcode lock</SectionTitle>
+      <Card flush>
+        <div className="flex items-center justify-between gap-4 px-5 py-4">
+          <div>
+            <p className="font-semibold">Require passcode</p>
+            <p className="text-sm text-muted">Asks for your passcode when the app opens, and after a minute away.</p>
+          </div>
+          <Toggle checked={lockOn} onChange={setLockEnabled} label="Require passcode" />
+        </div>
+        <button
+          className="w-full rounded-b-3xl border-t border-line px-5 py-4 text-left font-semibold text-accent active:bg-track"
+          onClick={() => {
+            setMismatch(false);
+            setStep('current');
+          }}
+        >
+          Change passcode
+        </button>
+      </Card>
+      <p className="mx-5 -mt-1 text-xs text-muted">
+        A privacy screen for your phone. It isn't encryption, so still keep backups somewhere safe.
+      </p>
+
+      <Sheet open={step !== null} onClose={() => setStep(null)} title={step ? titles[step] : ''}>
+        {step === 'done' ? (
+          <button className={`${buttonClass.primary} w-full`} onClick={() => setStep(null)}>Done</button>
+        ) : step ? (
+          <div className="pt-4 pb-2">
+            <p className="mb-6 h-5 text-center text-sm text-warn">{mismatch ? 'That didn’t match. Try again.' : ''}</p>
+            <PinPad
+              key={step}
+              onComplete={(pin) => {
+                if (step === 'current') {
+                  if (!verifyPin(pin, pinHash)) return false;
+                  setMismatch(false);
+                  setStep('new');
+                } else if (step === 'new') {
+                  setNewPin(pin);
+                  setStep('confirm');
+                } else if (step === 'confirm') {
+                  if (pin !== newPin) {
+                    setMismatch(true);
+                    setStep('new');
+                    return false;
+                  }
+                  setPinHash(hashPin(pin));
+                  setMismatch(false);
+                  setStep('done');
+                }
+              }}
+            />
+          </div>
+        ) : null}
+      </Sheet>
     </>
   );
 }

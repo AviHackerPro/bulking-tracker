@@ -7,7 +7,8 @@ Everything is saved on your phone. There's no account and no server. It installs
 
 - **Today:** a calorie ring and macro bars, your 5 meals with one-tap ticking, swap/skip, extras and custom foods, protein top-up ideas, and a one-tap training log.
 - **Barcode scanner:** scan a packet to get its label macros from [Open Food Facts](https://world.openfoodfacts.org) (free, no key). Scanned products can be saved for one-tap adding.
-- **AI photo analysis (optional):** snap a home meal and Google Gemini estimates each food's portion and macros. You review everything before it's logged.
+- **AI estimates (optional):** describe what you ate, snap a photo, or both, and Google Gemini estimates each food's portion and macros. You review everything before it's logged.
+- **Passcode lock:** a 4-digit passcode screen when the app opens (change it or turn it off in Settings).
 - **Plan:** edit the weekly rotation day by day (with live totals and low-protein warnings), and add, edit or delete meals.
 - **Progress:**
   - weigh-ins, with a chart of the weekly average against the target line, and a projected finish date
@@ -78,11 +79,11 @@ After that, every `git push` to `main` re-tests and re-publishes the app automat
 
 **Back up regularly:** Settings → **Export backup** saves a `.json` file to your Downloads. Data lives in the browser storage for that address, so clearing Chrome's site data or uninstalling the app would delete it. **Import** restores a backup, on the same phone or a new one.
 
-## Set up AI photo analysis (optional)
+## Set up AI estimates (optional)
 
 1. Get a free API key from [Google AI Studio](https://aistudio.google.com/apikey).
 2. In the app: **Settings → AI photo analysis**, paste the key, then tap **Save key**. It checks the key straight away.
-3. On Today, tap **AI photo**, take or choose a photo, add any details the photo can't show (e.g. "3 rotli, 2 tsp ghee"), and tap **Analyse**.
+3. On Today, tap **AI estimate**. Describe the food (e.g. "pav bhaji with 2 buttered pav"), add a photo, or both, and tap **Estimate macros**.
 
 Notes:
 - The key is stored only on your phone. It's never in the code on GitHub or in backup files.
@@ -129,7 +130,8 @@ src/
     suggestions.ts      status messages, protein top-ups
     backup.ts           export / import (never includes the API key)
     openFoodFacts.ts    barcode → product macros
-    gemini.ts           AI photo analysis (Gemini API)
+    gemini.ts           AI estimates from text and/or photos (Gemini API)
+    lock.ts             passcode lock (stored as a hash)
     image.ts            shrinks photos before upload
     storage.ts          what's saved on the phone
   store/                app state + automatic saving (localStorage)

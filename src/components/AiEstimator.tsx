@@ -1,16 +1,18 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { analyseMealPhoto, friendlyError, type AnalysedItem, type PhotoAnalysis } from '../lib/gemini';
+import { analyseMeal, friendlyError, type AnalysedItem, type PhotoAnalysis } from '../lib/gemini';
 import { prepareImage, type PreparedImage } from '../lib/image';
 import { scaleMacros, sumMacros } from '../lib/totals';
 import type { Meal } from '../lib/types';
 import { Spinner } from './BarcodeScanner';
-import { CheckIcon } from './icons';
+import { CheckIcon, XIcon } from './icons';
 import { buttonClass, fmt, inputClass, MacroLine } from './ui';
 
 const MULTIPLIERS = [0.5, 1, 1.5, 2];
+const EXAMPLES = ['Pav bhaji with 2 buttered pav', 'Subway 6-inch veggie with cheese', 'Mango lassi, 300 ml'];
 
-export default function PhotoAnalyser({
+/** AI estimate from a description, a photo, or both. */
+export default function AiEstimator({
   apiKey,
   model,
   meals,
@@ -36,9 +38,11 @@ export default function PhotoAnalyser({
   if (!apiKey) {
     return (
       <div className="rounded-2xl bg-track px-4 py-5 text-center">
-        <p className="text-3xl">📸</p>
-        <p className="mt-2 font-bold">Set up AI photo analysis</p>
-        <p className="mt-1 text-sm text-muted">Add your Gemini API key in Settings, then snap a photo of a home meal to estimate its macros.</p>
+        <p className="text-3xl">✨</p>
+        <p className="mt-2 font-bold">Set up AI estimates</p>
+        <p className="mt-1 text-sm text-muted">
+          Add your Gemini API key in Settings, then describe or photograph any meal to estimate its macros.
+        </p>
         <Link to="/settings" className={`${buttonClass.primary} mt-4 w-full`}>Open Settings</Link>
       </div>
     );
@@ -47,7 +51,6 @@ export default function PhotoAnalyser({
   async function pick(file: File | undefined) {
     if (!file) return;
     setError(null);
-    setResult(null);
     try {
       setImage(await prepareImage(file));
     } catch {
@@ -56,17 +59,16 @@ export default function PhotoAnalyser({
   }
 
   async function analyse() {
-    if (!image) return;
+    if (!image && !note.trim()) return;
     const controller = new AbortController();
     abortRef.current = controller;
     setBusy(true);
     setError(null);
     try {
-      const analysis = await analyseMealPhoto({
+      const analysis = await analyseMeal({
         apiKey,
         model,
-        imageBase64: image.base64,
-        mimeType: image.mimeType,
+        image: image && { base64: image.base64, mimeType: image.mimeType },
         note,
         meals,
         signal: controller.signal,
@@ -90,51 +92,59 @@ export default function PhotoAnalyser({
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
       <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
 
-      {image ? (
-        <div className="relative overflow-hidden rounded-3xl">
-          <img src={image.previewUrl} alt="Your meal" className="max-h-64 w-full object-cover" />
-          {!busy && !result && (
-            <button
-              onClick={() => {
-                setImage(null);
-                setResult(null);
-              }}
-              className="absolute top-2 right-2 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white"
-            >
-              Change
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          <button className="flex flex-col items-center gap-1 rounded-3xl bg-accent-soft px-3 py-6 font-semibold text-accent active:scale-[0.98]" onClick={() => cameraRef.current?.click()}>
-            <span className="text-3xl">📷</span> Take photo
-          </button>
-          <button className="flex flex-col items-center gap-1 rounded-3xl bg-track px-3 py-6 font-semibold active:scale-[0.98]" onClick={() => galleryRef.current?.click()}>
-            <span className="text-3xl">🖼️</span> From gallery
-          </button>
-        </div>
-      )}
-
-      {image && !result && (
+      {!result && (
         <>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            rows={2}
-            className={`${inputClass} mt-3`}
-            placeholder="Anything the photo can’t show? e.g. 3 rotli, cooked in 2 tsp ghee"
-            aria-label="Extra details"
+            rows={3}
+            className={inputClass}
+            placeholder={image ? 'Anything the photo can’t show? e.g. 3 rotli, cooked in 2 tsp ghee' : 'Describe what you ate, with amounts if you know them'}
+            aria-label="Describe your food"
+            disabled={busy}
           />
+          {!image && !note && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {EXAMPLES.map((ex) => (
+                <button key={ex} onClick={() => setNote(ex)} className="rounded-full bg-track px-3 py-1.5 text-xs font-medium text-muted">
+                  {ex}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {image ? (
+            <div className="relative mt-3 overflow-hidden rounded-3xl">
+              <img src={image.previewUrl} alt="Your meal" className="max-h-56 w-full object-cover" />
+              {!busy && (
+                <button
+                  onClick={() => setImage(null)}
+                  className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/55 px-3 py-1.5 text-sm font-semibold text-white"
+                >
+                  <XIcon size={14} /> Remove
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button className={buttonClass.ghost} onClick={() => cameraRef.current?.click()} disabled={busy}>
+                📷 Add photo
+              </button>
+              <button className={buttonClass.ghost} onClick={() => galleryRef.current?.click()} disabled={busy}>
+                🖼️ From gallery
+              </button>
+            </div>
+          )}
+
           {busy ? (
             <div className="mt-3 flex items-center gap-3 rounded-2xl bg-track px-4 py-3">
               <Spinner />
-              <span className="flex-1 text-[15px]">Looking at your meal…</span>
+              <span className="flex-1 text-[15px]">{image ? 'Looking at your meal…' : 'Working out the macros…'}</span>
               <button className="text-sm font-semibold text-muted" onClick={() => abortRef.current?.abort()}>Cancel</button>
             </div>
           ) : (
-            <button className={`${buttonClass.primary} mt-3 w-full`} onClick={analyse}>
-              ✨ Analyse photo
+            <button className={`${buttonClass.primary} mt-3 w-full`} onClick={analyse} disabled={!image && !note.trim()}>
+              ✨ Estimate macros
             </button>
           )}
         </>
@@ -156,11 +166,11 @@ export default function PhotoAnalyser({
           )}
 
           {result.items.length === 0 ? (
-            <p className="rounded-2xl bg-track px-4 py-3 text-sm">{result.notes || 'No food found in this photo.'}</p>
+            <p className="rounded-2xl bg-track px-4 py-3 text-sm">{result.notes || 'No food found to estimate.'}</p>
           ) : (
             <>
               <div className="mb-2 flex items-baseline justify-between">
-                <h3 className="text-sm font-bold">{matched ? 'Or add what Gemini saw' : 'What Gemini saw'}</h3>
+                <h3 className="text-sm font-bold">{matched ? 'Or add these items' : 'Gemini\u2019s estimate'}</h3>
                 <span className={`rounded-lg px-2 py-0.5 text-xs font-semibold ${result.confidence === 'high' ? 'bg-accent-soft text-accent' : 'bg-track text-muted'}`}>
                   {result.confidence} confidence
                 </span>
@@ -220,7 +230,7 @@ export default function PhotoAnalyser({
               setNote('');
             }}
           >
-            Try another photo
+            Start over
           </button>
         </div>
       )}
@@ -228,7 +238,7 @@ export default function PhotoAnalyser({
       <p className="mt-4 text-center text-xs leading-relaxed text-muted">
         AI estimates can be off by 20–30%. Adjust portions if needed.
         <br />
-        Photos are sent to Google Gemini for analysis.
+        Descriptions and photos are sent to Google Gemini.
       </p>
     </div>
   );

@@ -22,8 +22,8 @@ export function pickData(state: AppData): AppData {
 
 export function makeBackup(state: AppData, now: Date = new Date()): BackupFile {
   const data = pickData(state);
-  // The API key is a secret: keep it out of backup files.
-  const { geminiApiKey: _secret, ...settings } = data.settings;
+  // The API key and passcode stay on this phone: keep them out of backup files.
+  const { geminiApiKey: _secret, pinHash: _pin, ...settings } = data.settings;
   return { app: BACKUP_APP, version: BACKUP_VERSION, exportedAt: now.toISOString(), data: { ...data, settings } };
 }
 

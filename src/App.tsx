@@ -1,6 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import BottomNav from './components/BottomNav';
+import LockScreen from './components/LockScreen';
+import { useLock } from './store/useLock';
+import { shouldRelock } from './lib/lock';
 import { useAppStore } from './store/useAppStore';
 import Welcome from './pages/Welcome';
 import Today from './pages/Today';
@@ -12,7 +15,21 @@ const Progress = lazy(() => import('./pages/Progress'));
 
 export default function App() {
   const startDate = useAppStore((s) => s.profile.startDate);
+  const lockOn = useAppStore((s) => s.settings.lockEnabled ?? true);
+  const { locked, lock } = useLock();
 
+  // Lock again after the app has been in the background for a while.
+  useEffect(() => {
+    let hiddenAt: number | null = null;
+    const onChange = () => {
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now();
+      else if (shouldRelock(hiddenAt, Date.now())) lock();
+    };
+    document.addEventListener('visibilitychange', onChange);
+    return () => document.removeEventListener('visibilitychange', onChange);
+  }, [lock]);
+
+  if (lockOn && locked) return <LockScreen />;
   if (!startDate) return <Welcome />;
 
   return (

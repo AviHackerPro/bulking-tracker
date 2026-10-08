@@ -17,7 +17,9 @@ describe('backups', () => {
     const parsed = parseBackup(text);
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
-      expect(parsed.data).toEqual(state);
+      // Everything comes back except the passcode, which stays on the phone.
+      const { pinHash: _pin, ...settings } = state.settings;
+      expect(parsed.data).toEqual({ ...state, settings });
       expect(parsed.exportedAt).toBe('2026-10-06T08:00:00.000Z');
     }
   });
@@ -27,11 +29,12 @@ describe('backups', () => {
     expect(Object.keys(pickData(withFns))).not.toContain('logWeight');
   });
 
-  it('never puts the Gemini API key in a backup', () => {
+  it('never puts the Gemini API key or passcode in a backup', () => {
     const state = sampleState();
-    state.settings = { ...state.settings, geminiApiKey: 'secret-key-123', geminiModel: 'gemini-3.8-flash' };
+    state.settings = { ...state.settings, geminiApiKey: 'secret-key-123', geminiModel: 'gemini-3.8-flash', pinHash: 'abcdef0123456789' };
     const text = JSON.stringify(makeBackup(state));
     expect(text).not.toContain('secret-key-123');
+    expect(text).not.toContain('abcdef0123456789');
     expect(text).toContain('gemini-3.8-flash');
   });
 

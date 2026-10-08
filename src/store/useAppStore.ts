@@ -72,6 +72,10 @@ interface Actions {
   deleteFood: (id: string) => void;
   setGeminiKey: (key: string) => void;
   setGeminiModel: (model: string) => void;
+
+  // Passcode lock
+  setLockEnabled: (enabled: boolean) => void;
+  setPinHash: (hash: string) => void;
 }
 
 export type AppState = AppData & Actions;
@@ -225,9 +229,12 @@ export const useAppStore = create<AppState>()(
             return { meals, rotation: fresh.rotation, foods, dayLogs };
           }),
 
-        // A backup never contains the API key, so keep the one on this phone.
+        // A backup never contains the API key or passcode, so keep the ones on this phone.
         importData: (data) =>
-          set((s) => ({ ...data, settings: { ...data.settings, geminiApiKey: s.settings.geminiApiKey } })),
+          set((s) => ({
+            ...data,
+            settings: { ...data.settings, geminiApiKey: s.settings.geminiApiKey, pinHash: s.settings.pinHash },
+          })),
 
         resetAll: () => set({ ...createInitialData() }),
 
@@ -243,6 +250,10 @@ export const useAppStore = create<AppState>()(
         setGeminiKey: (key) => set((s) => ({ settings: { ...s.settings, geminiApiKey: key.trim() } })),
 
         setGeminiModel: (model) => set((s) => ({ settings: { ...s.settings, geminiModel: model } })),
+
+        setLockEnabled: (enabled) => set((s) => ({ settings: { ...s.settings, lockEnabled: enabled } })),
+
+        setPinHash: (hash) => set((s) => ({ settings: { ...s.settings, pinHash: hash } })),
       };
     },
     {

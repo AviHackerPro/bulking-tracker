@@ -79,6 +79,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Wrong passcode. */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.animate-shake { animation: shake 0.4s ease-in-out; }
+
 /* Bottom-sheet entrance. */
 @keyframes sheet-up {
   from { transform: translateY(24px); opacity: 0; }
@@ -92,5 +102,5 @@ body {
 .animate-fade { animation: fade-in 0.2s ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-sheet, .animate-fade { animation: none; }
+  .animate-sheet, .animate-fade, .animate-shake { animation: none; }
 }

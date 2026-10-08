@@ -1,6 +1,7 @@
-// AI photo analysis of meals using Google's Gemini API.
+// AI meal analysis using Google's Gemini API: from a photo, a written
+// description, or both.
 //
-// The photo goes straight from the phone to Google with your own API key
+// The request goes straight from the phone to Google with your own API key
 // (stored only on the phone). Gemini returns a structured list of foods
 // with estimated portions and macros, which you review before anything
 // is logged. Results are estimates: hidden oil, ghee and portion size
@@ -59,22 +60,23 @@ export const ANALYSIS_SCHEMA = {
 } as const;
 
 export const SYSTEM_INSTRUCTION = [
-  'You estimate the nutrition of a meal from a photo for a teenager tracking a healthy weight-gain diet.',
+  'You estimate the nutrition of a meal from a photo and/or a written description for a teenager tracking a healthy weight-gain diet.',
   'The person is lacto-vegetarian (dairy yes; no meat, fish or eggs) and lives in Australia. Many meals are Gujarati/Indian home cooking',
   '(rotli, dal, shaak, rice, kadhi, thepla, etc.), but they eat all kinds of food.',
-  'List each distinct food you can see as a separate item with an estimated portion (include grams) and its calories, protein, carbs and fat for that portion.',
-  'Allow for typical cooking oil or ghee in home-cooked dishes. Be realistic rather than optimistic, and never invent foods you cannot see.',
-  'If the photo clearly shows one of the listed meals from their own library, put its id in matched_meal_id; otherwise leave it empty.',
-  'If the image is not food, return no items and say so in notes.',
+  'List each distinct food as a separate item with an estimated portion (include grams) and its calories, protein, carbs and fat for that portion.',
+  'Use any amounts the person gives; otherwise assume a typical teenage portion. Allow for typical cooking oil or ghee in home-cooked dishes.',
+  'Be realistic rather than optimistic, and never add foods that are not shown or described.',
+  'If it clearly matches one of the listed meals from their own library, put its id in matched_meal_id; otherwise leave it empty.',
+  'If there is no food to analyse, return no items and say why in notes.',
 ].join(' ');
 
-export function buildUserPrompt(meals: Meal[], note: string): string {
+export function buildUserPrompt(meals: Meal[], note: string, hasImage = true): string {
   const library = meals
     .map((m) => `- id "${m.id}": ${m.name} (${m.ingredients}) = ${m.calories} cal, ${m.protein} g protein, ${m.carbs} g carbs, ${m.fat} g fat`)
     .join('\n');
   return [
-    'Estimate the nutrition of the food in this photo.',
-    note.trim() ? `Extra details from me: ${note.trim()}` : '',
+    hasImage ? 'Estimate the nutrition of the food in this photo.' : `Estimate the nutrition of what I ate: ${note.trim()}`,
+    hasImage && note.trim() ? `Extra details from me: ${note.trim()}` : '',
     'My usual meals, for reference:',
     library,
   ]
@@ -82,14 +84,19 @@ export function buildUserPrompt(meals: Meal[], note: string): string {
     .join('\n\n');
 }
 
+export interface ImageInput {
+  base64: string;
+  mimeType: string;
+}
+
 /** Body for the Interactions API (POST /v1beta/interactions). */
-export function buildInteractionsBody(model: string, imageBase64: string, mimeType: string, prompt: string) {
+export function buildInteractionsBody(model: string, image: ImageInput | null, prompt: string) {
   return {
     model,
     system_instruction: SYSTEM_INSTRUCTION,
     input: [
       { type: 'text', text: prompt },
-      { type: 'image', data: imageBase64, mime_type: mimeType },
+      ...(image ? [{ type: 'image', data: image.base64, mime_type: image.mimeType }] : []),
     ],
     response_format: { type: 'text', mime_type: 'application/json', schema: ANALYSIS_SCHEMA },
     generation_config: { thinking_level: 'low' },
@@ -97,10 +104,15 @@ export function buildInteractionsBody(model: string, imageBase64: string, mimeTy
 }
 
 /** Body for the classic generateContent API (used if Interactions isn't available). */
-export function buildGenerateContentBody(imageBase64: string, mimeType: string, prompt: string) {
+export function buildGenerateContentBody(image: ImageInput | null, prompt: string) {
   return {
     system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-    contents: [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: imageBase64 } }] }],
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }, ...(image ? [{ inline_data: { mime_type: image.mimeType, data: image.base64 } }] : [])],
+      },
+    ],
     generationConfig: { responseMimeType: 'application/json', responseJsonSchema: ANALYSIS_SCHEMA },
   };
 }
@@ -176,7 +188,7 @@ export function friendlyError(e: unknown): string {
     case 'no-key': return 'Add your Gemini API key in Settings first.';
     case 'bad-key': return 'Gemini didn’t accept your API key. Check it in Settings.';
     case 'rate-limit': return 'You’ve hit Gemini’s free limit for now. Try again in a minute, or later today.';
-    case 'blocked': return 'Gemini couldn’t analyse this photo. Try another one.';
+    case 'blocked': return 'Gemini couldn’t analyse that. Try a different photo or description.';
     case 'offline': return 'You’re offline. Photo analysis needs the internet.';
     case 'bad-reply': return 'Gemini’s answer didn’t make sense. Please try again.';
     default: return `Something went wrong${e instanceof Error && e.message ? `: ${e.message}` : ''}. Please try again.`;
@@ -250,21 +262,22 @@ async function generate(
   return text;
 }
 
-export async function analyseMealPhoto(opts: {
+/** Analyse a meal from a photo, a description, or both. */
+export async function analyseMeal(opts: {
   apiKey: string;
   model: string;
-  imageBase64: string;
-  mimeType: string;
+  image: ImageInput | null;
   note: string;
   meals: Meal[];
   signal?: AbortSignal;
 }): Promise<PhotoAnalysis> {
-  const prompt = buildUserPrompt(opts.meals, opts.note);
+  if (!opts.image && !opts.note.trim()) throw new GeminiError('error', 'Add a photo or describe the food');
+  const prompt = buildUserPrompt(opts.meals, opts.note, opts.image !== null);
   const text = await generate(
     opts.apiKey,
     opts.model,
-    buildInteractionsBody(opts.model, opts.imageBase64, opts.mimeType, prompt),
-    buildGenerateContentBody(opts.imageBase64, opts.mimeType, prompt),
+    buildInteractionsBody(opts.model, opts.image, prompt),
+    buildGenerateContentBody(opts.image, prompt),
     opts.signal,
   );
   try {

@@ -5,6 +5,7 @@
 // upgrade old saved data safely when the app changes.
 
 import { defaultPlan } from '../data/plan';
+import { DEFAULT_PIN_HASH } from './lock';
 import type {
   DayLog,
   DismissedSuggestion,
@@ -37,6 +38,10 @@ export interface AppSettings {
   /** Gemini API key for photo analysis. Stays on this phone: never in backups. */
   geminiApiKey?: string;
   geminiModel?: string;
+  /** Passcode lock (on unless turned off). Missing on older saved data means on. */
+  lockEnabled?: boolean;
+  /** Hash of the passcode, never the digits. Missing means the default passcode. */
+  pinHash?: string;
 }
 
 /** All saved data. New fields get added here in later phases. */
@@ -69,7 +74,7 @@ export function createInitialData(): AppData {
     meals: plan.meals,
     rotation: plan.rotation,
     foods: plan.foods,
-    settings: { wheyEnabled: false, lastBackupDate: null },
+    settings: { wheyEnabled: false, lastBackupDate: null, lockEnabled: true, pinHash: DEFAULT_PIN_HASH },
     weighIns: [],
     dayLogs: {},
     targetChanges: [],

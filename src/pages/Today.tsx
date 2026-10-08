@@ -221,7 +221,7 @@ export default function Today() {
             [
               ['list', <PlusIcon key="i" size={20} />, 'Add food'],
               ['barcode', <span key="i" className="text-lg leading-none">▥</span>, 'Barcode'],
-              ['photo', <span key="i" className="text-lg leading-none">📷</span>, 'AI photo'],
+              ['ai', <span key="i" className="text-lg leading-none">✨</span>, 'AI estimate'],
             ] as const
           ).map(([tab, icon, label]) => (
             <button
