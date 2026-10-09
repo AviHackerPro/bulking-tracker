@@ -14,7 +14,8 @@ import {
 import { WEEKDAYS } from '../src/lib/dates';
 import type { Macros, Weekday } from '../src/lib/types';
 
-const { rotation, meals, targets, foods } = defaultPlan;
+const { rotation, meals, targets, slots } = defaultPlan;
+const milk = { id: 'milk', name: 'Full-cream milk', serving: '250 ml', calories: 168, protein: 8.5, carbs: 12, fat: 8.5 };
 
 // Expected daily totals from the plan brief (section 5).
 const EXPECTED_DAYS: Record<Weekday, Macros> = {
@@ -61,9 +62,8 @@ describe('plan data integrity', () => {
     }
   });
 
-  it('meal and food ids are unique', () => {
+  it('meal ids are unique', () => {
     expect(new Set(meals.map((m) => m.id)).size).toBe(meals.length);
-    expect(new Set(foods.map((f) => f.id)).size).toBe(foods.length);
   });
 
   it('has the expected number of options per slot', () => {
@@ -74,8 +74,14 @@ describe('plan data integrity', () => {
     expect(mealsForSlot(meals, 'dinner')).toHaveLength(3);
   });
 
-  it('whey is the only food flagged as whey', () => {
-    expect(foods.filter((f) => f.isWhey).map((f) => f.id)).toEqual(['whey']);
+  it('has one meal time per slot, the same on school and home days', () => {
+    expect(Object.fromEntries(slots.map((s) => [s.id, s.time]))).toEqual({
+      breakfast: '08:00',
+      recess: '10:50',
+      lunch: '13:20',
+      afterSchool: '16:00',
+      dinner: '19:30',
+    });
   });
 
   it('macro targets add up to 2,747 cal (vs the 2,745 calorie target)', () => {
@@ -91,8 +97,6 @@ describe('plan data integrity', () => {
 });
 
 describe('macro helpers', () => {
-  const milk = foods.find((f) => f.id === 'milk')!;
-
   it('scales a serving', () => {
     expect(scaleMacros(milk, 1.5)).toEqual({ calories: 252, protein: 12.75, carbs: 18, fat: 12.75 });
     expect(scaleMacros(milk, 0.5).calories).toBe(84);

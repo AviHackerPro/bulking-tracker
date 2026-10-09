@@ -12,7 +12,7 @@ export type SlotId = 'breakfast' | 'recess' | 'lunch' | 'afterSchool' | 'dinner'
 
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
-/** 'school' uses school-day times and labels; 'home' uses weekend/holiday ones. */
+/** 'school' uses school-day labels (e.g. "Recess"); 'home' uses weekend/holiday ones. Times are the same. */
 export type DayType = 'school' | 'home';
 
 export interface SlotConfig {
@@ -21,9 +21,8 @@ export interface SlotConfig {
   label: string;
   /** Label on home days (weekends, holidays), e.g. "Morning snack". */
   homeLabel: string;
-  /** 24-hour "HH:mm". */
-  schoolTime: string;
-  homeTime: string;
+  /** 24-hour "HH:mm", the same on school and home days. */
+  time: string;
   /** Optional reminder shown under the slot, e.g. "Pack with an ice pack". */
   note?: string;
 }
@@ -35,18 +34,12 @@ export interface Meal extends Macros {
   ingredients: string;
 }
 
-/** 'saved' = products you scanned by barcode and saved. */
-export type FoodCategory = 'protein' | 'carb' | 'fat' | 'extra' | 'saved';
-
+/** A product you scanned by barcode and saved for one-tap adding. */
 export interface Food extends Macros {
   id: string;
   name: string;
-  /** Human-readable serving, e.g. "200 g" or "1 cup (~200 g)". */
+  /** Human-readable serving, e.g. "200 g" or "1 bar (40 g)". */
   serving: string;
-  category: FoodCategory;
-  /** Whey is hidden unless switched on in Settings. */
-  isWhey?: boolean;
-  /** For foods saved from a barcode scan. */
   barcode?: string;
 }
 
@@ -67,7 +60,6 @@ export interface Plan {
   slots: SlotConfig[];
   meals: Meal[];
   rotation: Rotation;
-  foods: Food[];
 }
 
 // ----- Daily logs ----------------------------------------------------
@@ -96,7 +88,7 @@ export interface ExtraLog {
   /** Macros for one serving (1×). */
   base: Macros;
   multiplier: number;
-  /** Set when picked from the food list. */
+  /** Set when picked from saved foods ("saved-…") or the food database ("afcd:…"). */
   foodId?: string;
 }
 

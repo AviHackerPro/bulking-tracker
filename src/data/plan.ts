@@ -2,7 +2,7 @@
 //  YOUR PLAN — the default data for the app.
 // ===================================================================
 //  Edit this file to change the starting plan: targets, meal slots,
-//  meal options, the weekly rotation and the food reference list.
+//  meal options and the weekly rotation.
 //
 //  How it's used: the first time the app opens, it copies this plan
 //  onto your phone. Changes you make inside the app (editing meals,
@@ -15,7 +15,7 @@
 //  That's expected. The app never recalculates calories from macros.
 // ===================================================================
 
-import type { Food, Meal, Plan, Rotation, SlotConfig } from '../lib/types';
+import type { Meal, Plan, Rotation, SlotConfig } from '../lib/types';
 
 // ----- Daily targets -------------------------------------------------
 // 2,745 cal/day = 2,441 maintenance + 305 surplus (rounded).
@@ -35,15 +35,21 @@ export const goal = {
 };
 
 // ----- Meal slots ----------------------------------------------------
-// Times are 24-hour "HH:mm". School days = Mon–Fri by default;
-// home days = weekends (and any day you switch to "home day").
+// Times are 24-hour "HH:mm" and the same every day. School days = Mon–Fri
+// by default; home days (weekends, or any day you switch to "home day")
+// only change the labels.
 export const slots: SlotConfig[] = [
-  { id: 'breakfast',   label: 'Breakfast',    homeLabel: 'Breakfast',       schoolTime: '07:30', homeTime: '08:00' },
-  { id: 'recess',      label: 'Recess',       homeLabel: 'Morning snack',   schoolTime: '10:50', homeTime: '11:00', note: 'Portable, no fridge needed' },
-  { id: 'lunch',       label: 'Lunch',        homeLabel: 'Lunch',           schoolTime: '13:20', homeTime: '13:30', note: 'Pack with an ice pack' },
-  { id: 'afterSchool', label: 'After school', homeLabel: 'Afternoon snack', schoolTime: '15:00', homeTime: '16:00' },
-  { id: 'dinner',      label: 'Dinner',       homeLabel: 'Dinner',          schoolTime: '19:30', homeTime: '19:30' },
+  { id: 'breakfast',   label: 'Breakfast',    homeLabel: 'Breakfast',       time: '08:00' },
+  { id: 'recess',      label: 'Recess',       homeLabel: 'Morning snack',   time: '10:50', note: 'Portable, no fridge needed' },
+  { id: 'lunch',       label: 'Lunch',        homeLabel: 'Lunch',           time: '13:20', note: 'Pack with an ice pack' },
+  { id: 'afterSchool', label: 'After school', homeLabel: 'Afternoon snack', time: '16:00' },
+  { id: 'dinner',      label: 'Dinner',       homeLabel: 'Dinner',          time: '19:30' },
 ];
+
+/** Times from older versions of the app, which had separate school and home times. */
+export const LEGACY_SCHOOL_TIMES: Record<string, string> = {
+  breakfast: '07:30', recess: '10:50', lunch: '13:20', afterSchool: '15:00', dinner: '19:30',
+};
 
 // ----- Meal options --------------------------------------------------
 export const meals: Meal[] = [
@@ -112,45 +118,5 @@ export const rotation: Rotation = {
   sun: { breakfast: 'pb-toast-milk',       recess: 'cheese-sandwich-apple', lunch: 'bean-cheese-burrito',  afterSchool: 'yoghurt-banana',       dinner: 'gujarati-thali' },
 };
 
-// ----- Food reference list -------------------------------------------
-// For extras and custom logging. Macros are per serving.
-export const foods: Food[] = [
-  // Protein sources
-  { id: 'greek-yoghurt',  category: 'protein', name: 'Greek yoghurt, plain high-protein', serving: '200 g',          calories: 150, protein: 19,  carbs: 8,  fat: 4 },
-  { id: 'tofu-firm',      category: 'protein', name: 'Tofu, firm',                        serving: '150 g',          calories: 195, protein: 19,  carbs: 3,  fat: 11 },
-  { id: 'paneer',         category: 'protein', name: 'Paneer',                            serving: '100 g',          calories: 300, protein: 18,  carbs: 3,  fat: 22 },
-  { id: 'lentils',        category: 'protein', name: 'Lentils, cooked',                   serving: '1 cup (~200 g)', calories: 230, protein: 18,  carbs: 40, fat: 1 },
-  { id: 'chickpeas',      category: 'protein', name: 'Chickpeas, cooked/canned',          serving: '1 cup (~165 g)', calories: 270, protein: 15,  carbs: 45, fat: 4 },
-  { id: 'kidney-beans',   category: 'protein', name: 'Kidney beans / rajma, cooked/canned', serving: '1 cup (~175 g)', calories: 225, protein: 15, carbs: 40, fat: 1 },
-  { id: 'cottage-cheese', category: 'protein', name: 'Cottage cheese',                    serving: '125 g',          calories: 125, protein: 14,  carbs: 4,  fat: 5 },
-  { id: 'milk',           category: 'protein', name: 'Full-cream milk',                   serving: '250 ml',         calories: 168, protein: 8.5, carbs: 12, fat: 8.5 },
-  { id: 'whey',           category: 'protein', name: 'Whey protein',                      serving: '30 g scoop',     calories: 120, protein: 24,  carbs: 3,  fat: 2, isWhey: true },
-
-  // Carb sources
-  { id: 'rice',           category: 'carb', name: 'White rice, cooked',     serving: '1 cup (~190 g)',     calories: 245, protein: 5,   carbs: 54, fat: 0.5 },
-  { id: 'oats',           category: 'carb', name: 'Rolled oats, dry',       serving: '50 g',               calories: 190, protein: 6.5, carbs: 30, fat: 3.5 },
-  { id: 'pasta',          category: 'carb', name: 'Pasta, cooked',          serving: '1 cup (~140 g)',     calories: 220, protein: 8,   carbs: 43, fat: 1.5 },
-  { id: 'wholemeal-bread', category: 'carb', name: 'Wholemeal bread',       serving: '2 slices (~80 g)',   calories: 200, protein: 8,   carbs: 34, fat: 2.5 },
-  { id: 'wrap-roti',      category: 'carb', name: 'Wrap or roti',           serving: '1 (~60 g)',          calories: 180, protein: 5,   carbs: 30, fat: 4 },
-  { id: 'potato',         category: 'carb', name: 'Potato',                 serving: '1 medium (~170 g)',  calories: 160, protein: 4,   carbs: 37, fat: 0 },
-  { id: 'banana',         category: 'carb', name: 'Banana',                 serving: '1 medium (~120 g)',  calories: 105, protein: 1.5, carbs: 27, fat: 0.5 },
-  { id: 'weetbix',        category: 'carb', name: 'Weet-Bix',               serving: '2 biscuits (30 g)',  calories: 106, protein: 4,   carbs: 20, fat: 0.5 },
-  { id: 'dates',          category: 'carb', name: 'Dates, dried',           serving: '50 g',               calories: 140, protein: 1,   carbs: 37, fat: 0 },
-
-  // Fat sources
-  { id: 'peanut-butter',  category: 'fat', name: 'Peanut butter',              serving: '2 tbsp (32 g)',     calories: 190, protein: 8,   carbs: 6, fat: 16 },
-  { id: 'nuts',           category: 'fat', name: 'Almonds or peanuts',         serving: '30 g',              calories: 170, protein: 6.5, carbs: 5, fat: 14.5 },
-  { id: 'olive-oil',      category: 'fat', name: 'Olive oil',                  serving: '1 tbsp',            calories: 120, protein: 0,   carbs: 0, fat: 14 },
-  { id: 'cheddar',        category: 'fat', name: 'Cheddar cheese',             serving: '30 g',              calories: 120, protein: 7.5, carbs: 0, fat: 10 },
-  { id: 'avocado',        category: 'fat', name: 'Avocado',                    serving: '½ medium (~75 g)',  calories: 120, protein: 1.5, carbs: 6, fat: 11 },
-  { id: 'butter-ghee',    category: 'fat', name: 'Butter or ghee',             serving: '1 tbsp',            calories: 108, protein: 0,   carbs: 0, fat: 12 },
-  { id: 'seeds',          category: 'fat', name: 'Pumpkin or sunflower seeds', serving: '30 g',              calories: 165, protein: 8,   carbs: 3, fat: 14 },
-  { id: 'dark-chocolate', category: 'fat', name: 'Dark chocolate (70%)',       serving: '20 g',              calories: 120, protein: 1.5, carbs: 9, fat: 9 },
-
-  // Extras (for days you need more calories or protein)
-  { id: 'milk-before-bed', category: 'extra', name: 'Glass of milk before bed', serving: '250 ml', calories: 168, protein: 8.5, carbs: 12, fat: 8.5 },
-  { id: 'peanut-chikki',   category: 'extra', name: 'Peanut chikki',            serving: '30 g',   calories: 150, protein: 4.5, carbs: 15, fat: 8 },
-];
-
 /** Everything above bundled together. */
-export const defaultPlan: Plan = { targets, goal, slots, meals, rotation, foods };
+export const defaultPlan: Plan = { targets, goal, slots, meals, rotation };

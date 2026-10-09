@@ -13,18 +13,16 @@ import {
   slotCounts,
   swapSlotMeal,
 } from '../src/lib/daylog';
-import { dayHeadline, macroStatus, proteinGapToSuggest, proteinSuggestions } from '../src/lib/suggestions';
+import { dayHeadline, macroStatus } from '../src/lib/suggestions';
 import { plannedDayTotals } from '../src/lib/totals';
 import type { DayLog, ExtraLog, Meal } from '../src/lib/types';
 
-const { meals, rotation, targets, foods, slots } = defaultPlan;
+const { meals, rotation, targets } = defaultPlan;
 const MONDAY = '2026-10-05';
 const meal = (id: string) => meals.find((m) => m.id === id)!;
-const food = (id: string) => foods.find((f) => f.id === id)!;
-const at = (hhmm: string) => new Date(`${MONDAY}T${hhmm}:00`);
+const milk = { id: 'milk', name: 'Full-cream milk', serving: '250 ml', calories: 168, protein: 8.5, carbs: 12, fat: 8.5 };
 
 function milkExtra(multiplier: number): ExtraLog {
-  const milk = food('milk');
   return { id: 'x1', name: milk.name, serving: milk.serving, base: milk, multiplier, foodId: milk.id };
 }
 
@@ -128,51 +126,5 @@ describe('status messages', () => {
     const fresh = buildDayLog(MONDAY, { rotation, meals, targets });
     expect(dayHeadline(fresh, true)).toMatch(/plan for today/);
     expect(dayHeadline(busyMonday(), true)).toBe('2 of 5 meals done. Keep it going!');
-  });
-});
-
-describe('protein suggestions', () => {
-  it('waits until after the after-school slot', () => {
-    expect(proteinGapToSuggest(busyMonday(), slots, at('14:59'), true)).toBe(0);
-    expect(proteinGapToSuggest(busyMonday(), slots, at('15:00'), true)).toBeCloseTo(15.25);
-  });
-
-  it('uses the home-day time on home days', () => {
-    const home = setDayType(busyMonday(), 'home'); // after-school slot is 16:00 at home
-    expect(proteinGapToSuggest(home, slots, at('15:30'), true)).toBe(0);
-    expect(proteinGapToSuggest(home, slots, at('16:00'), true)).toBeCloseTo(15.25);
-  });
-
-  it('only suggests for today, and only when projected to be short', () => {
-    expect(proteinGapToSuggest(busyMonday(), slots, at('18:00'), false)).toBe(0);
-    const onTrack = buildDayLog(MONDAY, { rotation, meals, targets }); // plan = 118 g
-    expect(proteinGapToSuggest(onTrack, slots, at('18:00'), true)).toBe(0);
-  });
-
-  it('suggests early if every meal is already ticked or skipped', () => {
-    let log = buildDayLog(MONDAY, { rotation, meals, targets });
-    for (const s of ['breakfast', 'recess', 'lunch', 'afterSchool', 'dinner'] as const) {
-      log = setSlotStatus(log, s, s === 'dinner' ? 'skipped' : 'eaten', meals);
-    }
-    expect(proteinGapToSuggest(log, slots, at('09:00'), true)).toBe(115 - 86);
-  });
-
-  it('ranks foods by protein per calorie with a covering serving size', () => {
-    const picks = proteinSuggestions(foods, 15.25, false);
-    expect(picks.map((p) => [p.food.id, p.multiplier])).toEqual([
-      ['greek-yoghurt', 1],
-      ['cottage-cheese', 1.5],
-      ['tofu-firm', 1],
-    ]);
-  });
-
-  it('includes whey only when switched on', () => {
-    expect(proteinSuggestions(foods, 15.25, false).some((p) => p.food.isWhey)).toBe(false);
-    expect(proteinSuggestions(foods, 15.25, true)[0].food.id).toBe('whey');
-  });
-
-  it('caps the serving between 0.5× and 2×', () => {
-    expect(proteinSuggestions(foods, 3, false)[0].multiplier).toBe(0.5);
-    expect(proteinSuggestions(foods, 80, false)[0].multiplier).toBe(2);
   });
 });

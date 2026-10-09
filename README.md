@@ -5,7 +5,8 @@ Everything is saved on your phone. There's no account and no server. It installs
 
 ## What it does
 
-- **Today:** a calorie ring and macro bars, your 5 meals with one-tap ticking, swap/skip, extras and custom foods, protein top-up ideas, and a one-tap training log.
+- **Today:** a calorie ring and macro bars, your 5 meals with one-tap ticking, swap/skip, extras and custom foods, and a one-tap training log.
+- **Food search:** about 1,000 everyday vegetarian foods from the [Australian Food Composition Database](https://www.foodstandards.gov.au/science-data/food-nutrient-databases/afcd) (Food Standards Australia New Zealand). It's built in, so it's instant and works offline. Pick an amount in grams (mL for drinks).
 - **Barcode scanner:** scan a packet to get its label macros from [Open Food Facts](https://world.openfoodfacts.org) (free, no key). Scanned products can be saved for one-tap adding.
 - **AI estimates (optional):** describe what you ate, snap a photo, or both, and Google Gemini estimates each food's portion and macros. You review everything before it's logged.
 - **Passcode lock:** a 4-digit passcode screen when the app opens (change it or turn it off in Settings).
@@ -16,7 +17,7 @@ Everything is saved on your phone. There's no account and no server. It installs
   - a simple ±200 cal check while the coach is still calibrating
   - training sessions
   - weekly history
-- **Settings:** appearance (dark, light or match phone), targets, goal, meal times, a whey toggle, the Gemini API key, passcode, backup export/import, and reset.
+- **Settings:** appearance (dark, light or match phone), targets, goal, meal times (the same on school and home days), the Gemini API key, passcode, backup export/import, and reset.
 - **Design:** black-and-gold theme (dark by default), custom icons, a timeline-style meal list, smooth tab transitions, animated rings and numbers, a small vibration when you tick things off (Android), and a celebration when you hit your protein target.
 - **Feel (inspired by Apple's fluid-interface guidelines):**
   - **Sheets** slide up on a spring. Drag the handle (or pull down from the top of the content) and the sheet follows your finger.
@@ -112,12 +113,29 @@ Data entered this way is separate from the installed app.
 
 ## Editing your plan
 
-All the default plan data lives in **[`src/data/plan.ts`](src/data/plan.ts)**: targets, meal times, meals, the weekly rotation and the food list.
+All the default plan data lives in **[`src/data/plan.ts`](src/data/plan.ts)**: targets, meal times, meals and the weekly rotation.
 
 - The app copies this onto the phone the first time it opens. After that, edits made in the app are saved on the phone.
   To pick up changes to this file on an existing phone, use Settings → **Restore default meals**.
 - Meal calories are stored exactly as written. They're never recalculated from the macros.
 - After editing, run `npm test`. If you change the default rotation or meals, update the expected values in `tests/totals.test.ts` too.
+
+## Food database
+
+The food search uses **AFCD Release 3** (December 2025) from Food Standards Australia New Zealand, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+Changes made for this app:
+- Kept energy, protein, fat and available carbohydrate only, and converted kJ to calories.
+- Left out meat, fish, egg and alcohol, plus foods whose names say they contain them.
+- Drinks are per 100 mL; everything else is per 100 g.
+
+The result is [`src/data/afcd.json`](src/data/afcd.json). To rebuild it from a new release:
+1. Download the "Nutrient profiles" Excel file from the [FSANZ download page](https://www.foodstandards.gov.au/science-data/food-nutrient-databases/afcd/australian-food-composition-database-download-excel-files).
+2. Run:
+   ```
+   python -I scripts/afcd/build_afcd.py "path/to/Nutrient profiles.xlsx" src/data/afcd.json
+   ```
+   It uses the Python standard library only, so there's nothing to install.
 
 ## App icons
 
@@ -128,6 +146,7 @@ The Stacked icons are generated from `public/icon.svg`. After changing the SVG, 
 ```
 src/
   data/plan.ts          your editable plan (defaults)
+  data/afcd.json        food database (built by scripts/afcd)
   lib/                  all the logic, as plain tested functions
     totals.ts           calorie/macro maths
     daylog.ts           ticking, swapping, skipping, extras
@@ -136,7 +155,8 @@ src/
     planEdits.ts        rotation & meal-library edits
     history.ts          weekly summaries
     habits.ts           training counts
-    suggestions.ts      status messages, protein top-ups
+    suggestions.ts      status messages
+    foodDatabase.ts     food search (AFCD)
     backup.ts           export / import (never includes the API key)
     openFoodFacts.ts    barcode → product macros
     gemini.ts           AI estimates from text and/or photos (Gemini API)
@@ -149,9 +169,10 @@ src/
   components/           shared UI (ui.tsx kit, icons, meal rows/sheets, chart, nav)
   pages/                Today, Plan, Progress, Settings (+ Welcome)
 tests/                  Vitest tests
+scripts/afcd/           rebuilds the food database from the FSANZ download
 .github/workflows/      GitHub Pages deploy
 ```
 
 ## Tech
 
-Vite · React · TypeScript · Tailwind CSS · Zustand (state + localStorage) · date-fns · Recharts · vite-plugin-pwa · barcode-detector · Open Food Facts · Gemini API · Vitest
+Vite · React · TypeScript · Tailwind CSS · Zustand (state + localStorage) · date-fns · Recharts · vite-plugin-pwa · barcode-detector · Open Food Facts · AFCD (FSANZ) · Gemini API · Vitest

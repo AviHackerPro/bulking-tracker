@@ -35,7 +35,7 @@ export default function MealSheet({
   return (
     <Sheet open={openSlot !== null} onClose={onClose} title={meal?.name ?? 'Choose a meal'}>
       <p className="-mt-1 mb-4 text-sm text-muted">
-        {school ? slot.label : slot.homeLabel} · {formatTime(school ? slot.schoolTime : slot.homeTime)}
+        {school ? slot.label : slot.homeLabel} · {formatTime(slot.time)}
         {slot.note && school && <span className="ml-2 rounded-md bg-track px-1.5 py-0.5 text-xs">{slot.note}</span>}
       </p>
 

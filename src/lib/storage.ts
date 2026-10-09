@@ -4,7 +4,7 @@
 // the Zustand store in src/store/useAppStore.ts. SCHEMA_VERSION lets us
 // upgrade old saved data safely when the app changes.
 
-import { defaultPlan } from '../data/plan';
+import { defaultPlan, LEGACY_SCHOOL_TIMES } from '../data/plan';
 import { DEFAULT_PIN_HASH } from './lock';
 import type {
   DayLog,
@@ -32,7 +32,6 @@ export interface Profile {
 }
 
 export interface AppSettings {
-  wheyEnabled: boolean;
   /** Date of the last JSON export ("yyyy-MM-dd"), for the backup reminder. */
   lastBackupDate?: string | null;
   /** Gemini API key for photo analysis. Stays on this phone: never in backups. */
@@ -56,6 +55,7 @@ export interface AppData {
   slots: SlotConfig[];
   meals: Meal[];
   rotation: Rotation;
+  /** Products you saved from barcode scans. */
   foods: Food[];
   settings: AppSettings;
   weighIns: WeighIn[];
@@ -77,14 +77,54 @@ export function createInitialData(): AppData {
     slots: plan.slots,
     meals: plan.meals,
     rotation: plan.rotation,
-    foods: plan.foods,
-    settings: { wheyEnabled: false, lastBackupDate: null, lockEnabled: true, pinHash: DEFAULT_PIN_HASH, theme: 'dark' },
+    foods: [],
+    settings: { lastBackupDate: null, lockEnabled: true, pinHash: DEFAULT_PIN_HASH, theme: 'dark' },
     weighIns: [],
     dayLogs: {},
     targetChanges: [],
     dismissedSuggestion: null,
     training: [],
   };
+}
+
+type Loose = Record<string, unknown>;
+const isObj = (v: unknown): v is Loose => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * Bring data saved by an older version of the app up to date. Safe to run
+ * on data that's already current. Used when the app loads and on import.
+ *  - Meal slots had separate school and home times; now there's one. Times
+ *    still on the old defaults move to the new ones; your own edits are kept.
+ *  - The built-in food list was replaced by the food database, so only the
+ *    foods you saved from barcode scans are kept.
+ *  - Removed features (sleep, whey toggle) are dropped.
+ */
+export function upgradeSavedData<T extends object>(data: T): T {
+  const { sleep: _sleep, ...rest } = data as Loose;
+  const out: Loose = { ...rest };
+  if (Array.isArray(out.slots)) {
+    out.slots = out.slots.map((slot: unknown) => {
+      if (!isObj(slot) || typeof slot.time === 'string') return slot;
+      const { schoolTime, homeTime: _home, ...keep } = slot;
+      const fresh = defaultPlan.slots.find((d) => d.id === slot.id);
+      const time =
+        typeof schoolTime === 'string' && schoolTime !== LEGACY_SCHOOL_TIMES[slot.id as string] ? schoolTime : (fresh?.time ?? '12:00');
+      return { ...keep, time };
+    });
+  }
+  if (Array.isArray(out.foods)) {
+    out.foods = out.foods
+      .filter((f: unknown) => isObj(f) && (f.category === undefined || f.category === 'saved'))
+      .map((f: Loose) => {
+        const { category: _c, isWhey: _w, ...food } = f;
+        return food;
+      });
+  }
+  if (isObj(out.settings)) {
+    const { wheyEnabled: _whey, ...settings } = out.settings;
+    out.settings = settings;
+  }
+  return out as T;
 }
 
 /** Short unique id. (crypto.randomUUID isn't available over plain http on a phone.) */

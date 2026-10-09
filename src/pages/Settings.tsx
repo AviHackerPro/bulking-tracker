@@ -6,7 +6,6 @@ import { backupFileName, makeBackup, parseBackup } from '../lib/backup';
 import { DEFAULT_GEMINI_MODEL, friendlyError, GEMINI_MODELS, testGeminiKey } from '../lib/gemini';
 import { DEFAULT_PIN_HASH, hashPin, verifyPin } from '../lib/lock';
 import PinPad from '../components/PinPad';
-import { HomeIcon, SchoolIcon } from '../components/icons';
 import { fromDateStr, todayStr } from '../lib/dates';
 import { caloriesFromMacros, orderedSlots } from '../lib/totals';
 import type { AppData } from '../lib/storage';
@@ -23,7 +22,6 @@ export default function Settings() {
       <TargetsCard key={`t${version}`} />
       <GoalCard key={`g${version}`} />
       <MealTimesCard />
-      <FoodListCard />
       <AiCard />
       <SecurityCard />
       <BackupCard onRestored={() => setVersion((v) => v + 1)} />
@@ -187,46 +185,22 @@ function MealTimesCard() {
       <Card flush>
         <ul className="divide-y divide-line">
           {orderedSlots(slots).map((s) => (
-            <li key={s.id} className="px-5 py-3">
-              <p className="mb-2 font-semibold">{s.label}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {(['schoolTime', 'homeTime'] as const).map((kind) => (
-                  <label key={kind} className="flex items-center gap-1.5 rounded-2xl bg-track px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-accent">
-                    <span className="text-muted" aria-hidden>{kind === 'schoolTime' ? <SchoolIcon size={16} /> : <HomeIcon size={16} />}</span>
-                    <input
-                      type="time"
-                      value={s[kind]}
-                      onChange={(e) => e.target.value && setSlotTime(s.id, kind, e.target.value)}
-                      className="min-w-0 flex-1 bg-transparent py-1 text-sm font-semibold tabular-nums outline-none"
-                      aria-label={`${s.label} time on ${kind === 'schoolTime' ? 'school' : 'home'} days`}
-                    />
-                  </label>
-                ))}
-              </div>
+            <li key={s.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
+              <span className="min-w-0">
+                <span className="block font-semibold">{s.label}</span>
+                {s.homeLabel !== s.label && <span className="block text-xs text-muted">{s.homeLabel} on home days</span>}
+              </span>
+              <input
+                type="time"
+                value={s.time}
+                onChange={(e) => e.target.value && setSlotTime(s.id, e.target.value)}
+                className="shrink-0 rounded-2xl bg-track px-3 py-2 text-sm font-semibold tabular-nums outline-none focus:ring-2 focus:ring-accent"
+                aria-label={`${s.label} time`}
+              />
             </li>
           ))}
         </ul>
-        <p className="border-t border-line px-5 py-3 text-xs text-muted">School days and home days (weekends, holidays). Changes save straight away.</p>
-      </Card>
-    </>
-  );
-}
-
-// ----- Food list ---------------------------------------------------------
-
-function FoodListCard() {
-  const { settings, setWhey } = useAppStore();
-  return (
-    <>
-      <SectionTitle>Food list</SectionTitle>
-      <Card>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="font-semibold">Whey protein</p>
-            <p className="text-sm text-muted">Show whey (30 g scoop · 24 g protein) in the food list and protein top-ups.</p>
-          </div>
-          <Toggle checked={settings.wheyEnabled} onChange={setWhey} label="Whey protein" />
-        </div>
+        <p className="border-t border-line px-5 py-3 text-xs text-muted">The same times every day. Changes save straight away.</p>
       </Card>
     </>
   );
@@ -486,7 +460,7 @@ function ResetCard() {
         <button className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left active:bg-track rounded-t-3xl" onClick={() => setConfirm('plan')}>
           <span>
             <span className="block font-semibold">Restore default meals</span>
-            <span className="block text-sm text-muted">Brings back the original meals, food list and weekly plan</span>
+            <span className="block text-sm text-muted">Brings back the original meals and weekly plan</span>
           </span>
         </button>
         <button
@@ -506,7 +480,7 @@ function ResetCard() {
 
       <Sheet open={confirm === 'plan'} onClose={() => setConfirm(null)} title="Restore default meals?">
         <p className="text-[0.9375rem] text-muted">
-          The original meals, food list and weekly plan come back. Meals you added yourself stay. Your logs, weight and targets aren't changed.
+          The original meals and weekly plan come back. Meals you added and foods you saved stay. Your logs, weight and targets aren't changed.
         </p>
         <div className="mt-5 flex gap-2">
           <button className={`${buttonClass.ghost} flex-1`} onClick={() => setConfirm(null)}>Cancel</button>

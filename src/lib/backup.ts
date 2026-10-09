@@ -1,6 +1,6 @@
 // Export / import of all saved data as a JSON backup file.
 
-import { createInitialData, type AppData } from './storage';
+import { createInitialData, upgradeSavedData, type AppData } from './storage';
 import { SLOT_ORDER } from './totals';
 import { WEEKDAYS } from './dates';
 
@@ -72,7 +72,7 @@ export function parseBackup(text: string): ParseResult {
   if (d.dayLogs !== undefined && !isObj(d.dayLogs)) return { ok: false, error: "The backup's daily logs are damaged." };
 
   const defaults = createInitialData();
-  const data = { ...defaults, ...(d as Partial<AppData>) } as AppData;
-  // Keep only known fields (drops anything from old versions, like sleep).
+  const data = { ...defaults, ...upgradeSavedData(d as Partial<AppData>) } as AppData;
+  // Keep only known fields (drops anything from old versions).
   return { ok: true, data: pickData(data), exportedAt: typeof json.exportedAt === 'string' ? json.exportedAt : null };
 }

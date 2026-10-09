@@ -22,7 +22,7 @@ export default function MealRow({
   const eaten = entry.status === 'eaten';
   const skipped = entry.status === 'skipped';
   const label = school ? slot.label : slot.homeLabel;
-  const [clock, period] = formatTime(school ? slot.schoolTime : slot.homeTime).split(' ');
+  const [clock, period] = formatTime(slot.time).split(' ');
 
   return (
     <li className="flex items-center gap-3 px-4 py-3">

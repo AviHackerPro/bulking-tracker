@@ -90,4 +90,3 @@ export const TrophyIcon = (p: IconProps) => (
     <path d="M8 6H5v1.5A3.5 3.5 0 008.5 11M16 6h3v1.5a3.5 3.5 0 01-3.5 3.5M12 13v4M8.5 20h7M10 17h4v3h-4z" />
   </Icon>
 );
-export const FlameIcon = (p: IconProps) => <Icon {...p}><path d="M12 21c4 0 6.5-2.7 6.5-6.3C18.5 10 13 8 13 3c-3 2-5.5 5-5 8.5C6.5 10.8 6 9.5 6 8.5 4.5 10 5.5 15 5.5 15c0 3.5 2.5 6 6.5 6z" /></Icon>;

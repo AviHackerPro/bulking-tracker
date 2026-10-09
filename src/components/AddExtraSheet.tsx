@@ -1,22 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { DEFAULT_GEMINI_MODEL, type AnalysedItem } from '../lib/gemini';
+import { FOOD_DATABASE_CREDIT, loadFoodDatabase, searchFoods, type DbFood } from '../lib/foodDatabase';
+import { macrosForGrams } from '../lib/openFoodFacts';
 import { scaleMacros } from '../lib/totals';
-import type { ExtraLog, Food, FoodCategory, Macros } from '../lib/types';
+import type { ExtraLog, Food, Macros } from '../lib/types';
 import BarcodeScanner from './BarcodeScanner';
 import AiEstimator from './AiEstimator';
 import { XIcon } from './icons';
 import { buttonClass, fmt, inputClass, Segmented, Sheet, UnitInput } from './ui';
 
-const CATEGORY_LABELS: Record<FoodCategory, string> = {
-  saved: 'My saved foods',
-  extra: 'Quick extras',
-  protein: 'Protein',
-  carb: 'Carbs',
-  fat: 'Fats',
-};
-const CATEGORY_ORDER: FoodCategory[] = ['saved', 'extra', 'protein', 'carb', 'fat'];
 const QUICK_MULTIPLIERS = [0.5, 1, 1.5, 2];
+const QUICK_AMOUNTS = { g: [50, 100, 150, 200], ml: [100, 200, 250, 300] };
 
 export type AddTab = 'list' | 'barcode' | 'ai' | 'custom';
 
@@ -65,7 +60,7 @@ export default function AddExtraSheet({ openTab, onClose, onAdd, onLogMeal }: Pr
           { value: 'custom', label: 'Custom' },
         ]}
       />
-      {tab === 'list' && <FoodList foods={foods} wheyEnabled={settings.wheyEnabled} onAdd={add} onDelete={deleteFood} />}
+      {tab === 'list' && <FoodList saved={foods} onAdd={add} onDelete={deleteFood} />}
       {tab === 'barcode' && <BarcodeScanner foods={foods} onAdd={add} onSave={saveFood} />}
       {tab === 'ai' && (
         <AiEstimator
@@ -85,72 +80,183 @@ export default function AddExtraSheet({ openTab, onClose, onAdd, onLogMeal }: Pr
 }
 
 function FoodList({
-  foods,
-  wheyEnabled,
+  saved,
   onAdd,
   onDelete,
 }: {
-  foods: Food[];
-  wheyEnabled: boolean;
+  saved: Food[];
   onAdd: (e: Omit<ExtraLog, 'id'>) => void;
   onDelete: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
+  const [database, setDatabase] = useState<DbFood[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return foods.filter((f) => (wheyEnabled || !f.isWhey) && (!q || f.name.toLowerCase().includes(q)));
-  }, [foods, wheyEnabled, query]);
+  useEffect(() => {
+    let live = true;
+    loadFoodDatabase()
+      .then((foods) => live && setDatabase(foods))
+      .catch(() => live && setLoadError(true));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const q = query.trim();
+  const savedMatches = useMemo(() => (q ? searchFoods(saved, q, 10) : saved), [saved, q]);
+  const results = useMemo(() => (q && database ? searchFoods(database, q) : []), [database, q]);
+  const toggle = (id: string) => setSelected(selected === id ? null : id);
 
   return (
     <div>
-      <input type="search" placeholder="Search foods" value={query} onChange={(e) => setQuery(e.target.value)} className={`${inputClass} mb-4`} />
-      {visible.length === 0 && <p className="py-6 text-center text-sm text-muted">No foods match. Try Barcode or Custom.</p>}
-      {CATEGORY_ORDER.map((cat) => {
-        const items = visible.filter((f) => f.category === cat);
-        if (items.length === 0) return null;
-        return (
-          <div key={cat} className="mb-5">
-            <h3 className="mb-1.5 text-xs font-bold tracking-wide text-muted uppercase">{CATEGORY_LABELS[cat]}</h3>
-            <ul className="space-y-1.5">
-              {items.map((f) => {
-                const isOpen = selected === f.id;
-                return (
-                  <li key={f.id} className={`overflow-hidden rounded-2xl ${isOpen ? 'bg-accent-soft' : 'bg-track'}`}>
-                    <button
-                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                      onClick={() => setSelected(isOpen ? null : f.id)}
-                      aria-expanded={isOpen}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate font-semibold">{f.name}</span>
-                        <span className="text-xs text-muted">{f.serving}</span>
-                      </span>
-                      <span className="shrink-0 text-right text-xs tabular-nums text-muted">
-                        <span className="block">{fmt(f.calories)} cal</span>
-                        <span className="font-semibold text-protein">{fmt(f.protein, 1)} g protein</span>
-                      </span>
-                    </button>
-                    {isOpen && <ServingPicker food={f} onAdd={onAdd} />}
-                    {isOpen && f.category === 'saved' && (
-                      <button
-                        className="mx-auto mb-3 flex items-center gap-1 text-xs font-semibold text-muted"
-                        onClick={() => {
-                          onDelete(f.id);
-                          setSelected(null);
-                        }}
-                      >
-                        <XIcon size={14} /> Remove from my saved foods
-                      </button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
+      <input
+        type="search"
+        placeholder={database ? `Search ${fmt(database.length)} foods` : 'Search foods'}
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setSelected(null);
+        }}
+        className={`${inputClass} mb-4`}
+        aria-label="Search foods"
+      />
+
+      {savedMatches.length > 0 && (
+        <FoodGroup title="My saved foods">
+          {savedMatches.map((f) => (
+            <FoodItem key={f.id} name={f.name} detail={f.serving} macros={f} open={selected === f.id} onToggle={() => toggle(f.id)}>
+              <ServingPicker food={f} onAdd={onAdd} />
+              <button
+                className="mx-auto mb-3 flex items-center gap-1 text-xs font-semibold text-muted"
+                onClick={() => {
+                  onDelete(f.id);
+                  setSelected(null);
+                }}
+              >
+                <XIcon size={14} /> Remove from my saved foods
+              </button>
+            </FoodItem>
+          ))}
+        </FoodGroup>
+      )}
+
+      {results.length > 0 && (
+        <FoodGroup title="Food database">
+          {results.map((f) => (
+            <FoodItem
+              key={f.id}
+              name={f.name}
+              detail={`per 100 ${f.unit === 'ml' ? 'mL' : 'g'}`}
+              macros={f}
+              open={selected === f.id}
+              onToggle={() => toggle(f.id)}
+            >
+              <AmountPicker food={f} onAdd={onAdd} />
+            </FoodItem>
+          ))}
+        </FoodGroup>
+      )}
+
+      {q && database && results.length === 0 && savedMatches.length === 0 && (
+        <p className="py-6 text-center text-sm text-muted">No foods match. Try fewer words, or use Barcode, AI or Custom.</p>
+      )}
+      {q && !database && !loadError && <p className="py-6 text-center text-sm text-muted">Loading foods…</p>}
+      {loadError && <p className="py-6 text-center text-sm text-muted">Couldn’t load the food list. Check your connection and try again.</p>}
+      {!q && (
+        <p className="py-4 text-center text-sm text-muted">
+          Search everyday foods like “chickpea”, “milk” or “rice”.
+          <br />
+          For Indian dishes or branded packets, try AI or Barcode.
+        </p>
+      )}
+
+      <p className="mt-2 text-center text-[0.6875rem] leading-snug text-muted">
+        Food data: {FOOD_DATABASE_CREDIT}. Vegetarian foods only; energy shown in calories.
+      </p>
+    </div>
+  );
+}
+
+function FoodGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="mb-5">
+      <h3 className="mb-1.5 text-xs font-bold tracking-wide text-muted uppercase">{title}</h3>
+      <ul className="space-y-1.5">{children}</ul>
+    </div>
+  );
+}
+
+function FoodItem({
+  name,
+  detail,
+  macros,
+  open,
+  onToggle,
+  children,
+}: {
+  name: string;
+  detail: string;
+  macros: Macros;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <li className={`overflow-hidden rounded-2xl ${open ? 'bg-accent-soft' : 'bg-track'}`}>
+      <button className="pressable flex w-full items-center justify-between gap-3 px-4 py-3 text-left" onClick={onToggle} aria-expanded={open}>
+        <span className="min-w-0">
+          <span className="line-clamp-2 leading-snug font-semibold">{name}</span>
+          <span className="text-xs text-muted">{detail}</span>
+        </span>
+        <span className="shrink-0 text-right text-xs tabular-nums text-muted">
+          <span className="block">{fmt(macros.calories)} cal</span>
+          <span className="font-semibold text-protein">{fmt(macros.protein, 1)} g protein</span>
+        </span>
+      </button>
+      {open && children}
+    </li>
+  );
+}
+
+/** Pick an amount in grams (or mL for drinks) for a database food. */
+function AmountPicker({ food, onAdd }: { food: DbFood; onAdd: (e: Omit<ExtraLog, 'id'>) => void }) {
+  const unit = food.unit === 'ml' ? 'mL' : 'g';
+  const [text, setText] = useState('100');
+  const amount = Number(text.replace(',', '.'));
+  const macros = Number.isFinite(amount) && amount > 0 && amount <= 5000 ? macrosForGrams(food, amount) : null;
+  const label = `${fmt(amount, 1)} ${unit}`;
+
+  return (
+    <div className="px-4 pb-4">
+      <div className="mb-3 flex gap-1.5">
+        {QUICK_AMOUNTS[food.unit].map((a) => (
+          <button
+            key={a}
+            className={`pressable flex-1 rounded-xl py-2 text-sm font-bold transition ${amount === a ? 'bg-accent text-accent-ink' : 'bg-card'}`}
+            onClick={() => setText(String(a))}
+          >
+            {a}
+          </button>
+        ))}
+        <label className="flex w-24 min-w-0 items-center rounded-xl bg-card focus-within:ring-2 focus-within:ring-accent">
+          <input
+            inputMode="decimal"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="w-full min-w-0 bg-transparent py-2 pl-2 text-right text-sm font-semibold outline-none"
+            aria-label={`Amount in ${unit}`}
+          />
+          <span className="pr-2 pl-1 text-sm text-muted">{unit}</span>
+        </label>
+      </div>
+      <button
+        className={`${buttonClass.primary} w-full`}
+        disabled={!macros}
+        onClick={() => macros && onAdd({ name: food.name, serving: label, base: macros, multiplier: 1, foodId: food.id })}
+      >
+        {macros ? `Add ${label} · ${fmt(macros.calories)} cal · ${fmt(macros.protein, 1)} g protein` : 'Enter an amount'}
+      </button>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { fromDateStr, toDateStr, todayStr, weekStartOf } from '../lib/dates';
 import { eatenTotals, extraMacros, slotCounts, stillPlannedTotals } from '../lib/daylog';
 import { sessionsInWeek, sessionsOn } from '../lib/habits';
 import { MIN_WEIGH_INS_PER_WEEK, weighInsThisWeek } from '../lib/progress';
-import { dayHeadline, proteinGapToSuggest, proteinSuggestions } from '../lib/suggestions';
+import { dayHeadline } from '../lib/suggestions';
 import { orderedSlots } from '../lib/totals';
 import { useNow } from '../lib/useNow';
 import type { Macros, SlotConfig } from '../lib/types';
@@ -21,7 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   DumbbellIcon,
-  FlameIcon,
   HomeIcon,
   PlusIcon,
   ScaleIcon,
@@ -58,7 +57,7 @@ export default function Today() {
   const isToday = date === today;
 
   const state = useAppStore();
-  const { slots, meals, foods, settings, profile, training, goal } = state;
+  const { slots, meals, profile, training, goal } = state;
   const log = useMemo(() => getDayLog(state, date), [state, date]);
   const [addTab, setAddTab] = useState<AddTab | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -67,8 +66,6 @@ export default function Today() {
   const eaten = eatenTotals(log);
   const upcoming = stillPlannedTotals(log);
   const counts = slotCounts(log);
-  const gap = proteinGapToSuggest(log, slots, now, isToday);
-  const ideas = gap > 0 ? proteinSuggestions(foods, gap, settings.wheyEnabled) : [];
   const minDate = profile.startDate ?? today;
 
   const { suggestion, coach } = useProgress(today);
@@ -190,38 +187,6 @@ export default function Today() {
           </span>
           <ChevronRight className="shrink-0 text-muted" />
         </Link>
-      )}
-
-      {ideas.length > 0 && (
-        <Card tone="accent">
-          <p className="flex items-center gap-1.5 font-semibold"><FlameIcon size={18} className="text-accent" /> Protein top-up</p>
-          <p className="mt-0.5 text-sm text-muted">
-            About {fmt(Math.ceil(gap))} g more would hit {fmt(log.targets.protein)} g today. Tap one to add it:
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {ideas.map(({ food, multiplier, protein }) => (
-              <button
-                key={food.id}
-                className="flex items-center gap-1.5 rounded-full bg-card px-3.5 py-2 text-sm font-semibold shadow-card active:scale-95"
-                onClick={() =>
-                  state.addExtra(date, {
-                    name: food.name,
-                    serving: food.serving,
-                    base: { calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat },
-                    multiplier,
-                    foodId: food.id,
-                  })
-                }
-              >
-                <PlusIcon size={16} className="text-accent" />
-                {food.name.split(',')[0]}
-                <span className="font-normal text-muted">
-                  {multiplier !== 1 && `${multiplier}× · `}+{fmt(protein, 1)} g
-                </span>
-              </button>
-            ))}
-          </div>
-        </Card>
       )}
 
       {/* Meals */}

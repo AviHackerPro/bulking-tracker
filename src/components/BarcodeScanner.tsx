@@ -299,7 +299,7 @@ function ProductResult({
           disabled={!macros}
           onClick={() => {
             if (!macros) return;
-            if (save && !fromSaved) onSave({ name, serving: amountLabel, category: 'saved', barcode: product.barcode, ...macros });
+            if (save && !fromSaved) onSave({ name, serving: amountLabel, barcode: product.barcode, ...macros });
             onAdd({ name, serving: amountLabel, base: macros, multiplier: 1 });
           }}
         >

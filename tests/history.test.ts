@@ -6,7 +6,8 @@ import { loggedDays, summariseDay, summariseWeek } from '../src/lib/history';
 import { SLOT_ORDER } from '../src/lib/totals';
 import type { DayLog, TrainingSession } from '../src/lib/types';
 
-const { meals, rotation, targets, foods, goal } = defaultPlan;
+const { meals, rotation, targets, goal } = defaultPlan;
+const milk = { id: 'milk', name: 'Full-cream milk', serving: '250 ml', calories: 168, protein: 8.5, carbs: 12, fat: 8.5 };
 const build = (date: string) => buildDayLog(date, { rotation, meals, targets });
 const WEEK = '2026-10-05';
 
@@ -17,7 +18,6 @@ function allEatenMonday(): DayLog {
 }
 
 function partialTuesday(): DayLog {
-  const milk = foods.find((f) => f.id === 'milk')!;
   let log = build('2026-10-06');
   log = setSlotStatus(log, 'breakfast', 'eaten', meals); // overnight oats 565/29/71/16
   log = setSlotStatus(log, 'recess', 'eaten', meals); // cheese sandwich 450/16/59/17

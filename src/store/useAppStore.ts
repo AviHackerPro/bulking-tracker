@@ -8,6 +8,7 @@ import {
   newId,
   SCHEMA_VERSION,
   STORAGE_KEY,
+  upgradeSavedData,
   type AppData,
   type ThemeSetting,
 } from '../lib/storage';
@@ -59,10 +60,9 @@ interface Actions {
   updateTargets: (targets: Macros) => void;
   updateProfile: (profile: { startDate: string; startWeightKg: number }) => void;
   updateGoal: (goal: Partial<Pick<GoalSettings, 'goalWeightKg' | 'weeklyRateKg'>>) => void;
-  setSlotTime: (slot: SlotId, kind: 'schoolTime' | 'homeTime', time: string) => void;
-  setWhey: (enabled: boolean) => void;
+  setSlotTime: (slot: SlotId, time: string) => void;
   markBackedUp: (date: string) => void;
-  /** Restore default meals, food list and weekly plan (your own meals and all logs are kept). */
+  /** Restore default meals and weekly plan (your own meals, saved foods and all logs are kept). */
   restoreDefaultPlan: () => void;
   /** Replace everything with data from a backup file. */
   importData: (data: AppData) => void;
@@ -70,7 +70,7 @@ interface Actions {
   resetAll: () => void;
 
   // Scanned foods & AI
-  /** Save a scanned product to the food list (replaces an earlier save of the same barcode). */
+  /** Save a scanned product to your saved foods (replaces an earlier save of the same barcode). */
   saveFood: (food: Omit<Food, 'id'>) => void;
   deleteFood: (id: string) => void;
   setGeminiKey: (key: string) => void;
@@ -217,10 +217,7 @@ export const useAppStore = create<AppState>()(
 
         updateGoal: (goal) => set((s) => ({ goal: { ...s.goal, ...goal } })),
 
-        setSlotTime: (slot, kind, time) =>
-          set((s) => ({ slots: s.slots.map((c) => (c.id === slot ? { ...c, [kind]: time } : c)) })),
-
-        setWhey: (enabled) => set((s) => ({ settings: { ...s.settings, wheyEnabled: enabled } })),
+        setSlotTime: (slot, time) => set((s) => ({ slots: s.slots.map((c) => (c.id === slot ? { ...c, time } : c)) })),
 
         markBackedUp: (date) => set((s) => ({ settings: { ...s.settings, lastBackupDate: date } })),
 
@@ -231,9 +228,7 @@ export const useAppStore = create<AppState>()(
             const today = todayStr();
             let dayLogs = edits.syncLogsWithRotation(s.dayLogs, today, fresh.rotation, meals);
             for (const m of fresh.meals) dayLogs = edits.refreshMealInLogs(dayLogs, today, m);
-            // Keep foods you saved from barcode scans.
-            const foods = [...fresh.foods, ...s.foods.filter((f) => f.category === 'saved')];
-            return { meals, rotation: fresh.rotation, foods, dayLogs };
+            return { meals, rotation: fresh.rotation, dayLogs };
           }),
 
         // A backup never contains the API key or passcode, so keep the ones on this phone.
@@ -248,11 +243,11 @@ export const useAppStore = create<AppState>()(
         saveFood: (food) =>
           set((s) => {
             const existing = food.barcode ? s.foods.find((f) => f.barcode === food.barcode) : undefined;
-            const saved: Food = { ...food, id: existing?.id ?? `saved-${newId()}`, category: 'saved' };
+            const saved: Food = { ...food, id: existing?.id ?? `saved-${newId()}` };
             return { foods: existing ? s.foods.map((f) => (f.id === existing.id ? saved : f)) : [...s.foods, saved] };
           }),
 
-        deleteFood: (id) => set((s) => ({ foods: s.foods.filter((f) => !(f.id === id && f.category === 'saved')) })),
+        deleteFood: (id) => set((s) => ({ foods: s.foods.filter((f) => f.id !== id) })),
 
         setGeminiKey: (key) => set((s) => ({ settings: { ...s.settings, geminiApiKey: key.trim() } })),
 
@@ -268,13 +263,9 @@ export const useAppStore = create<AppState>()(
     {
       name: STORAGE_KEY,
       version: SCHEMA_VERSION,
-      // Saved data is merged over fresh defaults, so fields added in later
-      // versions get sensible values on existing phones.
-      merge: (persisted, current) => {
-        // Drop fields from older versions that no longer exist (e.g. sleep).
-        const { sleep: _removed, ...rest } = persisted as Partial<AppData> & { sleep?: unknown };
-        return { ...current, ...rest };
-      },
+      // Saved data is upgraded, then merged over fresh defaults, so fields
+      // added in later versions get sensible values on existing phones.
+      merge: (persisted, current) => ({ ...current, ...upgradeSavedData((persisted ?? {}) as Partial<AppData>) }),
     },
   ),
 );
