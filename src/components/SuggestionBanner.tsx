@@ -44,7 +44,7 @@ export default function SuggestionBanner({
         <SparkIcon size={18} /> Suggestion
       </div>
       <h2 className="mt-1 text-xl font-bold">{up ? 'Add 200 cal a day' : 'Ease back 200 cal a day'}</h2>
-      <p className="mt-1 text-[15px] text-muted">
+      <p className="mt-1 text-[0.9375rem] text-muted">
         {up
           ? `Your weekly average moved ${suggestion.weeks.map((w) => kg(w.change!)).join(', then ')}: a little under the ${SLOW_GAIN_KG} kg/week goal. A bit more food should get things moving.`
           : `Your weekly average moved ${suggestion.weeks.map((w) => kg(w.change!)).join(', then ')}: faster than ${FAST_GAIN_KG} kg/week. Slowing a touch keeps the gain mostly muscle.`}

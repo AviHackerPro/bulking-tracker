@@ -79,7 +79,7 @@ export default function PinPad({
               onClick={() => press(k)}
               disabled={disabled}
               aria-label={k === 'back' ? 'Delete' : k}
-              className={`flex aspect-square items-center justify-center rounded-full text-[28px] font-semibold transition select-none active:scale-95 ${
+              className={`flex aspect-square items-center justify-center pressable rounded-full text-[1.75rem] font-semibold ${
                 k === 'back' ? 'text-muted' : keyClass
               }`}
             >

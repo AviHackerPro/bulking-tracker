@@ -96,7 +96,7 @@ export default function CoachPanel() {
                   }`}
                   aria-label={`${format(fromDateStr(d), 'EEEE')}: ${done ? 'complete' : 'not complete'}`}
                 />
-                <span className="mt-1 block text-[11px] text-muted">{format(fromDateStr(d), 'EEEEE')}</span>
+                <span className="mt-1 block text-[0.6875rem] text-muted">{format(fromDateStr(d), 'EEEEE')}</span>
               </div>
             );
           })}
@@ -128,7 +128,7 @@ function ConfidencePill({ coach }: { coach: CoachCheckIn | null }) {
   const level = coach?.confidence ?? 'calibrating';
   const label = { calibrating: 'Calibrating', good: 'Good confidence', high: 'High confidence' }[level];
   return (
-    <span className={`rounded-full px-2.5 py-1 text-[10px] tracking-[0.08em] ${level === 'calibrating' ? 'bg-white/10 text-muted' : 'bg-accent text-accent-ink'}`}>
+    <span className={`rounded-full px-2.5 py-1 text-[0.625rem] tracking-[0.08em] ${level === 'calibrating' ? 'bg-white/10 text-muted' : 'bg-accent text-accent-ink'}`}>
       {label}
     </span>
   );
@@ -193,7 +193,7 @@ function CheckInCard({
     <section className="mx-4 mb-3 rounded-3xl bg-card p-5 shadow-glow">
       <p className="text-xs font-semibold tracking-[0.12em] text-accent uppercase">Check-in · week of {weekLabel}</p>
       <h2 className="mt-1 text-xl font-bold">{s.direction === 'increase' ? 'Eat a little more' : 'Ease back a little'}</h2>
-      <p className="mt-1 text-[15px] text-muted">
+      <p className="mt-1 text-[0.9375rem] text-muted">
         {rate != null && `You’re ${rateText(rate)}, ${s.direction === 'increase' ? 'below' : 'above'} your +${goalRate} kg goal. `}
         Your maintenance looks like {fmt(coach.estimate)} cal.
       </p>
@@ -220,9 +220,9 @@ function CheckInCard({
 function Tile({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div className="rounded-2xl bg-card px-3 py-2.5 shadow-card">
-      <p className="text-[11px] text-muted">{label}</p>
+      <p className="text-[0.6875rem] text-muted">{label}</p>
       <p className="num text-lg font-extrabold">{value}</p>
-      <p className="text-[11px] text-muted">{sub}</p>
+      <p className="text-[0.6875rem] text-muted">{sub}</p>
     </div>
   );
 }

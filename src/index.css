@@ -33,6 +33,8 @@
   --shadow-card: 0 0 0 1px var(--color-line);
   --shadow-float: 0 12px 40px -10px rgb(0 0 0 / 0.7);
   --shadow-glow: 0 0 0 1px rgb(227 182 90 / 0.25), 0 10px 30px -10px rgb(227 182 90 / 0.35);
+  /* Light catching the edge of a translucent bar. */
+  --color-hairline: rgb(255 255 255 / 0.08);
 
   --font-sans: "Plus Jakarta Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -60,6 +62,7 @@
   --shadow-card: 0 1px 2px rgb(40 30 10 / 0.04), 0 6px 20px -4px rgb(40 30 10 / 0.07);
   --shadow-float: 0 10px 32px -8px rgb(40 30 10 / 0.22);
   --shadow-glow: 0 0 0 1px rgb(156 111 20 / 0.25), 0 10px 30px -10px rgb(156 111 20 / 0.3);
+  --color-hairline: rgb(0 0 0 / 0.08);
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme="system"] {
@@ -84,6 +87,7 @@
     --shadow-card: 0 1px 2px rgb(40 30 10 / 0.04), 0 6px 20px -4px rgb(40 30 10 / 0.07);
     --shadow-float: 0 10px 32px -8px rgb(40 30 10 / 0.22);
     --shadow-glow: 0 0 0 1px rgb(156 111 20 / 0.25), 0 10px 30px -10px rgb(156 111 20 / 0.3);
+    --color-hairline: rgb(0 0 0 / 0.08);
   }
 }
 
@@ -134,11 +138,44 @@ html[data-theme="light"] {
   }
 }
 
+/* Black behind everything, so the page can recede behind sheets like iOS. */
+html {
+  background: #000;
+}
 body {
-  background: var(--color-canvas);
+  background: transparent;
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
+}
+
+/* No double-tap-zoom delay on anything you can tap. */
+a, button, input, select, textarea, label, [role="button"], [role="switch"], [role="tab"] {
+  touch-action: manipulation;
+}
+
+/* Press feedback starts the instant a finger lands, and settles fast. */
+.pressable {
+  transition: transform 100ms ease-out, opacity 100ms ease-out, background-color 150ms ease-out;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.pressable:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Translucent material for floating bars: content scrolls underneath. */
+.material-bar {
+  background: color-mix(in srgb, var(--color-canvas) 72%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+.material-bar.edge-top {
+  box-shadow: inset 0 1px 0 var(--color-hairline);
+}
+.material-bar.edge-bottom {
+  box-shadow: inset 0 -1px 0 var(--color-hairline);
 }
 
 /* Big numbers: tighter, even digits. */
@@ -173,18 +210,18 @@ body {
   .animate-sheet, .animate-fade, .animate-shake { animation: none; }
 }
 
-/* Page transitions between tabs (cross-fade with a slight rise). The bottom bar stays put. */
+/* Tab switches: a quick cross-fade (tabs sit side by side, so nothing slides). Bottom bar stays put. */
 ::view-transition-old(root) {
-  animation: 160ms ease-out both vt-fade-out;
+  animation: 140ms ease-out both vt-fade-out;
 }
 ::view-transition-new(root) {
-  animation: 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both vt-rise-in;
+  animation: 180ms ease-out both vt-fade-in;
 }
 @keyframes vt-fade-out {
   to { opacity: 0; }
 }
-@keyframes vt-rise-in {
-  from { opacity: 0; transform: translateY(8px); }
+@keyframes vt-fade-in {
+  from { opacity: 0; }
 }
 
 /* Loading shimmer for AI estimates. */
@@ -224,4 +261,34 @@ body {
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
   .shimmer, .animate-toast, .spark, .animate-pop { animation: none; }
+}
+
+/* Accessibility: respect the phone's display settings. */
+@media (prefers-reduced-transparency: reduce) {
+  .material-bar {
+    background: var(--color-canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .sheet-scrim {
+    background: rgb(0 0 0 / 0.72);
+  }
+}
+@media (prefers-contrast: more) {
+  :root,
+  :root[data-theme] {
+    --color-muted: color-mix(in srgb, var(--color-ink) 82%, var(--color-canvas));
+    --color-line: color-mix(in srgb, var(--color-ink) 40%, var(--color-canvas));
+    --color-hairline: var(--color-line);
+    --shadow-card: 0 0 0 1px var(--color-line);
+  }
+  .material-bar {
+    background: var(--color-canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pressable:active:not(:disabled) { transform: none; opacity: 0.7; }
+  .slide-thumb { transition: none !important; }
 }

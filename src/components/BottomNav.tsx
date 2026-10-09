@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from 'react-router';
 import type { ReactNode } from 'react';
-import { haptic, withTransition } from '../lib/feel';
+import { withTransition } from '../lib/feel';
 import { PlanIcon, ProgressIcon, SettingsIcon, TodayIcon } from './icons';
 
 const tabs: { to: string; label: string; icon: ReactNode }[] = [
@@ -16,7 +16,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-canvas/80 backdrop-blur-xl [view-transition-name:bottom-nav]"
+      className="material-bar edge-top fixed inset-x-0 bottom-0 z-20 [view-transition-name:bottom-nav]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="mx-auto flex max-w-lg px-2">
@@ -29,11 +29,10 @@ export default function BottomNav() {
                 e.preventDefault();
                 const here = pathname === t.to && !search;
                 if (here) return;
-                haptic(8);
                 withTransition(() => navigate(t.to));
               }}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 pt-2 pb-2.5 text-[11px] font-semibold tracking-wide transition-colors ${
+                `pressable flex flex-col items-center gap-0.5 pt-2 pb-2.5 text-[0.6875rem] font-semibold tracking-[0.02em] ${
                   isActive ? 'text-accent' : 'text-muted'
                 }`
               }

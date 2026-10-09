@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router';
 import App from './App';
 import { useAppStore } from './store/useAppStore';
+import { withTransition } from './lib/feel';
 import { requestPersistentStorage } from './lib/storage';
 import '@fontsource-variable/plus-jakarta-sans';
 import './index.css';
@@ -18,8 +19,11 @@ function applyTheme() {
 }
 applyTheme();
 useAppStore.subscribe((s, prev) => {
-  if (s.settings.theme !== prev.settings.theme) applyTheme();
+  // Cross-fade between light and dark instead of an abrupt brightness jump.
+  if (s.settings.theme !== prev.settings.theme) withTransition(applyTheme);
 });
+// Lets :active press styles show the instant a finger lands (iOS Safari needs a touch listener).
+document.addEventListener('touchstart', () => {}, { passive: true });
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme);
 
 createRoot(document.getElementById('root')!).render(

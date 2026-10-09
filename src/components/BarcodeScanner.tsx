@@ -86,7 +86,7 @@ export default function BarcodeScanner({
       {status.kind === 'looking' && (
         <div className="flex items-center gap-3 rounded-2xl bg-track px-4 py-6">
           <Spinner />
-          <span className="text-[15px]">Looking up {status.barcode}…</span>
+          <span className="text-[0.9375rem]">Looking up {status.barcode}…</span>
         </div>
       )}
       {status.kind === 'found' && (

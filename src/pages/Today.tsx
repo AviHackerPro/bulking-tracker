@@ -31,7 +31,8 @@ import {
   XIcon,
 } from '../components/icons';
 import Celebration from '../components/Celebration';
-import { haptic, useCountUp } from '../lib/feel';
+import CompactTitle from '../components/CompactTitle';
+import { haptic, pop, useCountUp } from '../lib/feel';
 import { Bar, Card, fmt, MacroLine, Ring, SectionTitle } from '../components/ui';
 
 function dayTitle(date: string, today: string): string {
@@ -60,6 +61,7 @@ export default function Today() {
   const { slots, meals, foods, settings, profile, training, goal } = state;
   const log = useMemo(() => getDayLog(state, date), [state, date]);
   const [addTab, setAddTab] = useState<AddTab | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const [openSlot, setOpenSlot] = useState<SlotConfig | null>(null);
 
   const eaten = eatenTotals(log);
@@ -112,12 +114,13 @@ export default function Today() {
     <main>
       {/* Header */}
       <header className="px-5 pt-7 pb-4">
+        <CompactTitle watch={titleRef}>{dayTitle(date, today)}</CompactTitle>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted">
               {isToday ? greeting(now) : format(fromDateStr(date), 'EEEE d MMMM')}
             </p>
-            <h1 className="text-[28px] leading-tight font-extrabold tracking-tight">{dayTitle(date, today)}</h1>
+            <h1 ref={titleRef} className="text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.025em]">{dayTitle(date, today)}</h1>
           </div>
           <div className="flex shrink-0 gap-1.5">
             <button
@@ -292,7 +295,14 @@ export default function Today() {
         Training
       </SectionTitle>
       <Card flush>
-        <button onClick={toggleTraining} className="flex w-full items-center gap-3 px-4 py-3 text-left" aria-pressed={trainedSessions.length > 0}>
+        <button
+          onClick={(e) => {
+            if (!trainedSessions.length) pop(e.currentTarget.lastElementChild);
+            toggleTraining();
+          }}
+          className="pressable flex w-full items-center gap-3 px-4 py-3 text-left"
+          aria-pressed={trainedSessions.length > 0}
+        >
           <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${trainedSessions.length ? 'bg-accent-soft text-accent' : 'bg-track text-muted'}`}>
             <DumbbellIcon size={22} />
           </span>
@@ -315,11 +325,12 @@ export default function Today() {
       {/* Mark the day as fully logged (feeds the maintenance coach) */}
       <Card flush className={`mt-6 ${!log.complete && counts.planned === 0 ? 'ring-1 ring-accent/50' : ''}`}>
         <button
-          onClick={() => {
+          onClick={(e) => {
+            if (!log.complete) pop(e.currentTarget.lastElementChild);
             haptic(log.complete ? 8 : 18);
             state.setDayComplete(date, !log.complete);
           }}
-          className="flex w-full items-center gap-3 px-4 py-4 text-left"
+          className="pressable flex w-full items-center gap-3 px-4 py-4 text-left"
           aria-pressed={!!log.complete}
         >
           <span className="min-w-0 flex-1">
@@ -392,8 +403,8 @@ function Hero({
       </div>
       <div className="flex items-center gap-5">
         <Ring value={eaten.calories} upcoming={upcoming.calories} target={targets.calories} size={132} stroke={11} color="var(--color-accent)" trackColor="rgb(255 255 255 / 0.08)">
-          <span className="num text-[28px] leading-none font-extrabold">{fmt(Math.round(calories))}</span>
-          <span className="mt-1 text-[11px] text-muted">of {fmt(targets.calories)} cal</span>
+          <span className="num text-[1.75rem] leading-none font-extrabold">{fmt(Math.round(calories))}</span>
+          <span className="mt-1 text-[0.6875rem] text-muted">of {fmt(targets.calories)} cal</span>
         </Ring>
         <div className="min-w-0 flex-1 space-y-3.5">
           {rows.map(({ key, label, bar }) => {
@@ -412,7 +423,7 @@ function Hero({
           })}
         </div>
       </div>
-      <p className="mt-5 border-t border-line pt-4 text-[15px] text-ink/90">
+      <p className="mt-5 border-t border-line pt-4 text-[0.9375rem] text-ink/90">
         {calToGo > 0 && <span className="font-bold text-accent">{fmt(calToGo)} cal to go. </span>}
         {message}
       </p>

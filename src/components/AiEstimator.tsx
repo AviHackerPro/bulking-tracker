@@ -137,7 +137,7 @@ export default function AiEstimator({
 
           {busy ? (
             <div className="mt-3" aria-live="polite">
-              <div className="flex items-center gap-2.5 text-[15px]">
+              <div className="flex items-center gap-2.5 text-[0.9375rem]">
                 <SparkleIcon size={18} className="animate-pulse text-accent" />
                 <span className="flex-1">{image ? 'Looking at your meal…' : 'Working out the macros…'}</span>
                 <button className="text-sm font-semibold text-muted" onClick={() => abortRef.current?.abort()}>Cancel</button>

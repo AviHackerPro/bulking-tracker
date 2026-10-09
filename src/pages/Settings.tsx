@@ -279,7 +279,7 @@ function AiCard() {
             placeholder="Paste your Gemini API key"
             autoComplete="off"
             spellCheck={false}
-            className="w-full min-w-0 bg-transparent px-4 py-3 text-[15px] outline-none placeholder:text-muted/70"
+            className="w-full min-w-0 bg-transparent px-4 py-3 text-[0.9375rem] outline-none placeholder:text-muted/70"
             aria-label="Gemini API key"
           />
           <button type="button" className="pr-4 text-sm font-semibold text-accent" onClick={() => setShow(!show)}>
@@ -441,7 +441,7 @@ function BackupCard({ onRestored }: { onRestored: () => void }) {
       <Sheet open={pending !== null} onClose={() => setPending(null)} title="Restore this backup?">
         {pending && (
           <>
-            <p className="text-[15px]">
+            <p className="text-[0.9375rem]">
               This replaces everything on this phone with the backup
               {pending.exportedAt ? ` from ${format(new Date(pending.exportedAt), 'd MMM yyyy, h:mm a')}` : ''}:
             </p>
@@ -505,7 +505,7 @@ function ResetCard() {
       {done && <p className="mx-5 text-sm font-semibold text-accent">Default meals restored.</p>}
 
       <Sheet open={confirm === 'plan'} onClose={() => setConfirm(null)} title="Restore default meals?">
-        <p className="text-[15px] text-muted">
+        <p className="text-[0.9375rem] text-muted">
           The original meals, food list and weekly plan come back. Meals you added yourself stay. Your logs, weight and targets aren't changed.
         </p>
         <div className="mt-5 flex gap-2">
@@ -524,7 +524,7 @@ function ResetCard() {
       </Sheet>
 
       <Sheet open={confirm === 'all'} onClose={() => setConfirm(null)} title="Delete all data?">
-        <p className="text-[15px]">
+        <p className="text-[0.9375rem]">
           This erases every meal log, weigh-in, training session and setting on this phone. It can't be undone. Export a backup first if you might want it later.
         </p>
         <label className="mt-4 block text-sm text-muted">

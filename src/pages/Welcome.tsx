@@ -25,14 +25,14 @@ export default function Welcome() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col">
+    <main className="mx-auto flex min-h-dvh max-w-lg flex-col bg-canvas">
       <section className="hero-surface rounded-b-[36px] border-x-0 border-t-0 px-6 pt-14 pb-10">
         <div className="flex items-center gap-3">
           <LogoTile size={48} />
           <Wordmark className="text-gold-gradient text-2xl" />
         </div>
-        <h1 className="mt-8 text-[32px] leading-tight font-extrabold tracking-tight">Let's build your bulk</h1>
-        <p className="mt-2 text-[15px] text-muted">Your plan is ready. Here's what you're aiming for:</p>
+        <h1 className="mt-8 text-[2rem] leading-[1.08] font-extrabold tracking-[-0.03em]">Let's build your bulk</h1>
+        <p className="mt-2 text-[0.9375rem] text-muted">Your plan is ready. Here's what you're aiming for:</p>
         <div className="mt-6 grid grid-cols-3 gap-2 text-center">
           {[
             [fmt(targets.calories), 'calories a day'],
@@ -41,7 +41,7 @@ export default function Welcome() {
           ].map(([v, l]) => (
             <div key={l} className="rounded-2xl bg-white/[0.06] px-2 py-3 ring-1 ring-white/10">
               <div className="num text-lg font-extrabold text-accent">{v}</div>
-              <div className="text-[11px] text-muted">{l}</div>
+              <div className="text-[0.6875rem] text-muted">{l}</div>
             </div>
           ))}
         </div>
@@ -66,7 +66,7 @@ export default function Welcome() {
         </label>
 
         {weeks !== null && (
-          <p className="mt-6 rounded-2xl bg-accent-soft px-4 py-3 text-[15px]">
+          <p className="mt-6 rounded-2xl bg-accent-soft px-4 py-3 text-[0.9375rem]">
             Reaching <strong>{goal.goalWeightKg} kg</strong> takes about <strong>{weeks} weeks</strong>. Slow and steady builds
             mostly muscle.
           </p>

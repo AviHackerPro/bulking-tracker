@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { haptic } from '../lib/feel';
 import { TrophyIcon } from './icons';
 
@@ -17,7 +18,7 @@ export default function Celebration({ text, onDone }: { text: string; onDone: ()
     return () => window.clearTimeout(id);
   }, []);
 
-  return (
+  return createPortal(
     <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 14px)' }} role="status">
       <div className="hero-surface animate-toast relative flex items-center gap-2.5 rounded-full px-5 py-3 shadow-float">
         {SPARKS.map((s, i) => (
@@ -30,6 +31,7 @@ export default function Celebration({ text, onDone }: { text: string; onDone: ()
         <TrophyIcon size={20} className="text-accent" />
         <span className="text-sm font-bold">{text}</span>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

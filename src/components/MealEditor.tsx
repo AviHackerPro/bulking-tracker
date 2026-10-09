@@ -17,7 +17,9 @@ export default function MealEditor({
   onSave,
   onDelete,
   onClose,
+  open = true,
 }: {
+  open?: boolean;
   slot: SlotConfig;
   meal?: Meal;
   meals: Meal[];
@@ -28,7 +30,7 @@ export default function MealEditor({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
-    <Sheet open onClose={onClose} title={meal ? 'Edit meal' : `New ${slot.label.toLowerCase()} meal`}>
+    <Sheet open={open} onClose={onClose} title={meal ? 'Edit meal' : `New ${slot.label.toLowerCase()} meal`}>
       {confirmDelete && meal ? (
         <DeleteMeal meal={meal} meals={meals} slot={slot} rotation={rotation} onConfirm={onDelete} onCancel={() => setConfirmDelete(false)} />
       ) : (
@@ -128,7 +130,7 @@ function DeleteMeal({
   if (others.length === 0) {
     return (
       <div>
-        <p className="text-[15px]">
+        <p className="text-[0.9375rem]">
           <strong>{meal.name}</strong> is your only {slot.label.toLowerCase()} option. Add another one first, then you can delete this.
         </p>
         <button className={`${buttonClass.ghost} mt-5 w-full`} onClick={onCancel}>Got it</button>
@@ -138,7 +140,7 @@ function DeleteMeal({
 
   return (
     <div className="space-y-3">
-      <p className="text-[15px]">
+      <p className="text-[0.9375rem]">
         Delete <strong>{meal.name}</strong>? Days you already ate it stay in your history.
       </p>
       <label className="block">

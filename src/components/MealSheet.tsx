@@ -1,4 +1,5 @@
 import { formatTime } from '../lib/dates';
+import { useLastNonNull } from '../lib/feel';
 import { findMeal, mealsForSlot } from '../lib/totals';
 import type { DayLog, Meal, SlotConfig, SlotStatus } from '../lib/types';
 import { CheckIcon, SkipIcon, UndoIcon } from './icons';
@@ -6,7 +7,7 @@ import { buttonClass, MacroGrid, MacroLine, Sheet } from './ui';
 
 /** Details for one meal slot: macros, ingredients, tick / skip, and swap options. */
 export default function MealSheet({
-  slot,
+  slot: openSlot,
   log,
   meals,
   onClose,
@@ -20,6 +21,8 @@ export default function MealSheet({
   onStatus: (status: SlotStatus) => void;
   onSwap: (mealId: string) => void;
 }) {
+  // Keep showing the last meal while the sheet slides away.
+  const slot = useLastNonNull(openSlot);
   if (!slot) return null;
   const entry = log.slots[slot.id];
   const school = log.dayType === 'school';
@@ -30,7 +33,7 @@ export default function MealSheet({
   const skipped = entry.status === 'skipped';
 
   return (
-    <Sheet open onClose={onClose} title={meal?.name ?? 'Choose a meal'}>
+    <Sheet open={openSlot !== null} onClose={onClose} title={meal?.name ?? 'Choose a meal'}>
       <p className="-mt-1 mb-4 text-sm text-muted">
         {school ? slot.label : slot.homeLabel} · {formatTime(school ? slot.schoolTime : slot.homeTime)}
         {slot.note && school && <span className="ml-2 rounded-md bg-track px-1.5 py-0.5 text-xs">{slot.note}</span>}
@@ -39,7 +42,7 @@ export default function MealSheet({
       {meal && (
         <>
           <MacroGrid m={meal} />
-          {ingredients && <p className="mt-4 text-[15px] leading-relaxed">{ingredients}</p>}
+          {ingredients && <p className="mt-4 text-[0.9375rem] leading-relaxed">{ingredients}</p>}
 
           <div className="mt-5 flex gap-2">
             {!skipped && (

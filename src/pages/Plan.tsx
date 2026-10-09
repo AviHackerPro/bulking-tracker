@@ -6,6 +6,7 @@ import { usesOfMeal } from '../lib/planEdits';
 import { mealsForSlot, orderedSlots, plannedWeekTotals } from '../lib/totals';
 import type { Meal, SlotConfig, Weekday } from '../lib/types';
 import MealEditor from '../components/MealEditor';
+import { useLastNonNull } from '../lib/feel';
 import { ChevronDown, ChevronRight, PlusIcon } from '../components/icons';
 import { buttonClass, Card, fmt, MacroLine, PageHeader, Segmented, SectionTitle, Sheet } from '../components/ui';
 
@@ -68,8 +69,8 @@ function WeekTab() {
                 {fmt(average[k])}
                 <span className="text-xs font-semibold">{unit}</span>
               </div>
-              <div className="text-[11px] text-muted">{label}</div>
-              <div className="text-[11px] text-muted tabular-nums">of {fmt(targets[k])}</div>
+              <div className="text-[0.6875rem] text-muted">{label}</div>
+              <div className="text-[0.6875rem] text-muted tabular-nums">of {fmt(targets[k])}</div>
             </div>
           ))}
         </div>
@@ -93,7 +94,7 @@ function WeekTab() {
             }`}
           >
             <span className="text-xs font-bold">{WEEKDAY_LABELS[d]}</span>
-            <span className={`text-[10px] tabular-nums ${day === d ? 'text-accent-ink/80' : 'text-muted'}`}>{fmt(days[d].calories)}</span>
+            <span className={`text-[0.625rem] tabular-nums ${day === d ? 'text-accent-ink/80' : 'text-muted'}`}>{fmt(days[d].calories)}</span>
             {low(d) && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-warn" aria-label="under protein target" />}
             {d === today && <span className={`mt-1 h-1 w-1 rounded-full ${day === d ? 'bg-accent-ink' : 'bg-accent'}`} aria-label="today" />}
           </button>
@@ -147,7 +148,7 @@ function WeekTab() {
       </div>
 
       <Sheet open={confirmReset} onClose={() => setConfirmReset(false)} title="Reset your weekly plan?">
-        <p className="text-[15px] text-muted">Every day goes back to the original plan. Your meals and past days stay as they are.</p>
+        <p className="text-[0.9375rem] text-muted">Every day goes back to the original plan. Your meals and past days stay as they are.</p>
         <div className="mt-5 flex gap-2">
           <button className={`${buttonClass.ghost} flex-1`} onClick={() => setConfirmReset(false)}>Cancel</button>
           <button
@@ -172,6 +173,7 @@ type Editing = { slot: SlotConfig; meal?: Meal } | null;
 function MealsTab() {
   const { meals, slots, rotation, addMeal, updateMeal, deleteMeal } = useAppStore();
   const [editing, setEditing] = useState<Editing>(null);
+  const shownEditing = useLastNonNull(editing);
 
   return (
     <>
@@ -211,21 +213,22 @@ function MealsTab() {
         );
       })}
 
-      {editing && (
+      {shownEditing && (
         <MealEditor
-          key={editing.meal?.id ?? `new-${editing.slot.id}`}
-          slot={editing.slot}
-          meal={editing.meal}
+          key={shownEditing.meal?.id ?? `new-${shownEditing.slot.id}`}
+          open={editing !== null}
+          slot={shownEditing.slot}
+          meal={shownEditing.meal}
           meals={meals}
           rotation={rotation}
           onClose={() => setEditing(null)}
           onSave={(values) => {
-            if (editing.meal) updateMeal({ ...editing.meal, ...values });
-            else addMeal({ ...values, slot: editing.slot.id });
+            if (shownEditing.meal) updateMeal({ ...shownEditing.meal, ...values });
+            else addMeal({ ...values, slot: shownEditing.slot.id });
             setEditing(null);
           }}
           onDelete={(replacementId) => {
-            if (editing.meal) deleteMeal(editing.meal.id, replacementId);
+            if (shownEditing.meal) deleteMeal(shownEditing.meal.id, replacementId);
             setEditing(null);
           }}
         />

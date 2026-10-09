@@ -1,9 +1,9 @@
 // Shared building blocks. Every screen is made from these, so the look stays consistent.
 
-import { useEffect, useState, type ReactNode } from 'react';
-import { reducedMotion } from '../lib/feel';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import CompactTitle from './CompactTitle';
+import { haptic, reducedMotion } from '../lib/feel';
 import type { Macros } from '../lib/types';
-import { XIcon } from './icons';
 
 // ----- Formatting ----------------------------------------------------
 
@@ -26,10 +26,12 @@ export const MACRO_META: Record<MacroKey, { label: string; unit: string; bar: st
 // ----- Layout --------------------------------------------------------
 
 export function PageHeader({ title, subtitle, right }: { title: ReactNode; subtitle?: ReactNode; right?: ReactNode }) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
   return (
     <header className="flex items-end justify-between gap-3 px-5 pt-7 pb-4">
+      <CompactTitle watch={titleRef}>{title}</CompactTitle>
       <div className="min-w-0">
-        <h1 className="text-[28px] leading-tight font-extrabold tracking-tight">{title}</h1>
+        <h1 ref={titleRef} className="text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.025em]">{title}</h1>
         {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
       </div>
       {right}
@@ -40,7 +42,7 @@ export function PageHeader({ title, subtitle, right }: { title: ReactNode; subti
 export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
   return (
     <div className="mx-5 mt-6 mb-2.5 flex items-center justify-between gap-3">
-      <h2 className="text-[15px] font-bold">{children}</h2>
+      <h2 className="text-[0.9375rem] font-bold">{children}</h2>
       {right && <div className="text-sm text-muted">{right}</div>}
     </div>
   );
@@ -68,7 +70,7 @@ export function Card({
   return <section className={`mx-4 mb-3 rounded-3xl ${CARD_TONES[tone]} ${flush ? '' : 'p-5'} ${className}`}>{children}</section>;
 }
 
-/** Pill-style switch between a few options. */
+/** Pill-style switch between a few options. The selection slides between them. */
 export function Segmented<T extends string>({
   options,
   value,
@@ -80,15 +82,21 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
   className?: string;
 }) {
+  const index = Math.max(0, options.findIndex((o) => o.value === value));
   return (
-    <div className={`flex rounded-2xl bg-track p-1 text-sm font-semibold ${className}`} role="tablist">
+    <div className={`relative flex rounded-2xl bg-track p-1 text-sm font-semibold ${className}`} role="tablist">
+      <span
+        aria-hidden
+        className="slide-thumb absolute top-1 bottom-1 left-1 rounded-xl bg-raised shadow-card transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+        style={{ width: `calc((100% - 0.5rem) / ${options.length})`, transform: `translateX(${index * 100}%)` }}
+      />
       {options.map((o) => (
         <button
           key={o.value}
           role="tab"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`flex-1 rounded-xl px-3 py-2 transition-colors ${value === o.value ? 'bg-raised text-ink shadow-card' : 'text-muted'}`}
+          className={`relative z-10 flex-1 rounded-xl px-3 py-2 transition-colors duration-200 ${value === o.value ? 'text-ink' : 'text-muted'}`}
         >
           {o.label}
         </button>
@@ -100,17 +108,17 @@ export function Segmented<T extends string>({
 // ----- Buttons & inputs -----------------------------------------------
 
 const BUTTON_BASE =
-  'inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[15px] font-semibold transition active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100';
+  'pressable inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[0.9375rem] font-semibold disabled:opacity-40';
 export const buttonClass = {
   primary: `${BUTTON_BASE} bg-gold-gradient text-[#17120a] shadow-glow`,
   soft: `${BUTTON_BASE} bg-accent-soft text-accent`,
   ghost: `${BUTTON_BASE} bg-track text-ink`,
   danger: `${BUTTON_BASE} bg-warn text-card`,
-  quiet: 'inline-flex items-center gap-1 text-sm font-semibold text-accent active:opacity-70',
+  quiet: 'pressable inline-flex items-center gap-1 text-sm font-semibold text-accent',
 };
 
 export const inputClass =
-  'w-full rounded-2xl border border-transparent bg-track px-4 py-3 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-accent focus:bg-card';
+  'w-full rounded-2xl border border-transparent bg-track px-4 py-3 text-[0.9375rem] outline-none transition placeholder:text-muted/70 focus:border-accent focus:bg-card';
 
 /** A text input with a unit on the right, e.g. "kg". */
 export function UnitInput({
@@ -139,7 +147,7 @@ export function UnitInput({
         placeholder={placeholder}
         aria-label={label}
         autoFocus={autoFocus}
-        className="w-full min-w-0 bg-transparent px-4 py-3 text-[15px] outline-none placeholder:text-muted/70"
+        className="w-full min-w-0 bg-transparent px-4 py-3 text-[0.9375rem] outline-none placeholder:text-muted/70"
       />
       <span className="pr-4 text-sm text-muted">{unit}</span>
     </div>
@@ -163,8 +171,8 @@ export function MacroGrid({ m }: { m: Macros }) {
     <div className="grid grid-cols-4 gap-2">
       {MACRO_KEYS.map((k) => (
         <div key={k} className="rounded-2xl bg-track px-2 py-2.5 text-center">
-          <div className="text-[15px] font-bold tabular-nums">{fmt(m[k], 1)}</div>
-          <div className="text-[11px] text-muted">
+          <div className="text-[0.9375rem] font-bold tabular-nums">{fmt(m[k], 1)}</div>
+          <div className="text-[0.6875rem] text-muted">
             {k === 'calories' ? 'cal' : `g ${MACRO_META[k].label.toLowerCase()}`}
           </div>
         </div>
@@ -249,40 +257,7 @@ export function Ring({
 
 // ----- Overlays --------------------------------------------------------
 
-/** Bottom sheet: slides up from the bottom on phones. */
-export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode }) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = overflow;
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true">
-      <button className="animate-fade absolute inset-0 bg-black/45" aria-label="Close" onClick={onClose} />
-      <div
-        className="animate-sheet relative flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-[28px] bg-card shadow-float sm:rounded-[28px]"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-line sm:hidden" />
-        <div className="flex items-start justify-between gap-3 px-5 pt-3 pb-2">
-          <h2 className="text-lg leading-snug font-bold">{title}</h2>
-          <button onClick={onClose} className="-mr-2 rounded-full p-2 text-muted active:bg-track" aria-label="Close">
-            <XIcon />
-          </button>
-        </div>
-        <div className="overflow-y-auto px-5 pt-1 pb-6">{children}</div>
-      </div>
-    </div>
-  );
-}
+export { Sheet } from './Sheet';
 
 /** Placeholder for screens that arrive in a later phase. */
 export function ComingSoon({ phase, children }: { phase: number; children: ReactNode }) {
@@ -301,10 +276,15 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-line'}`}
+      onClick={() => {
+        haptic(10);
+        onChange(!checked);
+      }}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${checked ? 'bg-accent' : 'bg-line'}`}
     >
-      <span className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+      <span
+        className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${checked ? 'translate-x-5' : ''}`}
+      />
     </button>
   );
 }

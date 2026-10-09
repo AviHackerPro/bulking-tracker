@@ -21,7 +21,7 @@ export default function LockScreen() {
   return (
     <div className="hero-surface fixed inset-0 z-50 flex flex-col items-center justify-center border-0 px-6" role="dialog" aria-modal="true" aria-label="Enter passcode">
       <LogoTile size={68} />
-      <Wordmark className="text-gold-gradient mt-4 text-[26px]" />
+      <Wordmark className="text-gold-gradient mt-4 text-[1.625rem]" />
       <h1 className="mt-6 text-lg font-semibold">Enter passcode</h1>
       <p className="mt-1 mb-8 h-5 text-sm text-muted">
         {waiting

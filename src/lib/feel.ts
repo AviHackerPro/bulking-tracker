@@ -17,6 +17,14 @@ export function haptic(pattern: number | number[] = 12): void {
   }
 }
 
+/** A quick "pop" on an element, fired on the same frame as its haptic. */
+export function pop(el: Element | null): void {
+  if (!el || reducedMotion()) return;
+  el.classList.remove('animate-pop');
+  void (el as HTMLElement).offsetWidth; // restart the animation
+  el.classList.add('animate-pop');
+}
+
 /** Run a UI change inside a smooth cross-fade, where the browser supports it. */
 export function withTransition(update: () => void): void {
   const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
@@ -54,4 +62,11 @@ export function useCountUp(value: number, duration = 650): number {
   }, [value, duration]);
 
   return shown;
+}
+
+/** The last non-null value: lets a closing sheet keep showing its content while it animates away. */
+export function useLastNonNull<T>(value: T | null): T | null {
+  const last = useRef<T | null>(value);
+  if (value !== null) last.current = value;
+  return value ?? last.current;
 }

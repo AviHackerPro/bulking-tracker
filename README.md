@@ -18,6 +18,12 @@ Everything is saved on your phone. There's no account and no server. It installs
   - weekly history
 - **Settings:** appearance (dark, light or match phone), targets, goal, meal times, a whey toggle, the Gemini API key, passcode, backup export/import, and reset.
 - **Design:** black-and-gold theme (dark by default), custom icons, a timeline-style meal list, smooth tab transitions, animated rings and numbers, a small vibration when you tick things off (Android), and a celebration when you hit your protein target.
+- **Feel (inspired by Apple's fluid-interface guidelines):**
+  - **Sheets** slide up on a spring. Drag the handle (or pull down from the top of the content) and the sheet follows your finger.
+    A flick closes it, and the release speed carries straight into the animation. You can grab it again mid-slide, and the page behind dims and recedes as the sheet rises.
+  - **Frosted bars:** the bottom nav and a compact page title that appears once the big title scrolls away. Tap the compact title to jump back to the top.
+  - **Instant press feedback** on buttons, a sliding segmented control, and the tick "pop" lands on the same frame as the vibration.
+  - **Respects phone settings:** reduce motion (no sliding, just quick fades), reduce transparency (solid bars), higher contrast, and larger text sizes.
 
 ## What you need
 
@@ -136,6 +142,7 @@ src/
     gemini.ts           AI estimates from text and/or photos (Gemini API)
     lock.ts             passcode lock (stored as a hash)
     feel.ts             haptics, page transitions, count-up numbers
+    spring.ts           spring physics, momentum projection, rubber-banding
     image.ts            shrinks photos before upload
     storage.ts          what's saved on the phone
   store/                app state + automatic saving (localStorage)

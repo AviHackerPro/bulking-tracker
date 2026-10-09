@@ -313,7 +313,7 @@ function TrainingTab() {
             <div key={i} className={`h-3 flex-1 rounded-full ${i < count ? 'bg-accent' : 'bg-track'}`} />
           ))}
         </div>
-        <p className="mt-3 text-[15px]">{trainingMessage(count, target)}</p>
+        <p className="mt-3 text-[0.9375rem]">{trainingMessage(count, target)}</p>
       </Card>
 
       <Card>
